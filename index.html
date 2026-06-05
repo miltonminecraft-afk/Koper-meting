@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -57,6 +58,7 @@ body.page-layout-vertical .document-card{height:auto}
 #reader{width:100%;min-height:280px;overflow:hidden;border-radius:10px;background:#000}
 .qr-box{background:white;color:black;border-radius:10px;padding:20px;text-align:center;overflow:auto}
 .qr-box canvas{max-width:100%;height:auto}
+.hidden{display:none}
 @media(max-width:900px){body.page-layout-horizontal .layout{grid-template-columns:1fr}.document-card{height:auto}.document{min-height:520px}.actions,.grid,.grid-three{grid-template-columns:1fr}}
 </style>
 </head>
@@ -122,7 +124,12 @@ body.page-layout-vertical .document-card{height:auto}
 <div><label>Stijl</label><input id="newPositionStijlInput" placeholder="000"></div>
 <div><label>Stift</label><input id="newPositionStiftInput" placeholder="000"></div>
 </div>
-<div class="note">Vul dit alleen in als de ader slecht meet. De eerstvolgende normale Argus scan wordt dan als Nieuwe positie in het tekstdocument gezet. Laat deze velden leeg voor een normale meting.</div>
+<div id="newDikaderBlock" class="hidden">
+<label>Nieuwe dikader</label>
+<select id="newDikaderSelect"></select>
+<div id="newDikaderNote" class="note"></div>
+</div>
+<div class="note">Vul dit alleen in als de ader slecht meet. De eerstvolgende normale Argus scan wordt dan als Nieuwe positie in het tekstdocument gezet. Nieuwe dikader verschijnt alleen bij de laatste HVD of KVD vóór ISRA.</div>
 <button class="secondary full" id="clearNewPositionButton">Nieuwe positie leegmaken</button>
 </div>
 
@@ -215,6 +222,9 @@ const newPositionSelect=document.getElementById("newPositionSelect");
 const newPositionRijInput=document.getElementById("newPositionRijInput");
 const newPositionStijlInput=document.getElementById("newPositionStijlInput");
 const newPositionStiftInput=document.getElementById("newPositionStiftInput");
+const newDikaderBlock=document.getElementById("newDikaderBlock");
+const newDikaderSelect=document.getElementById("newDikaderSelect");
+const newDikaderNote=document.getElementById("newDikaderNote");
 const documentOutput=document.getElementById("documentOutput");
 const counterInfo=document.getElementById("counterInfo");
 const lclServiceSelect=document.getElementById("lclServiceSelect");
@@ -252,6 +262,7 @@ if(!state.routeInfo.hvd)state.routeInfo.hvd={hRij:"",hStijl:"",hStift:"",vRij:""
 if(!Array.isArray(state.routeInfo.kvds))state.routeInfo.kvds=[];
 while(state.routeInfo.kvds.length<state.kvds.length)state.routeInfo.kvds.push(emptyVInfo());
 state.routeInfo.kvds.forEach(info=>{["sipStijl","sipStift","vStijl","vStift"].forEach(key=>{if(!(key in info))info[key]=""})});
+state.measurements.forEach(item=>{if(!("newDikader" in item))item.newDikader=""});
 }
 
 function setTheme(value){
@@ -446,6 +457,8 @@ function clearNewPosition(){
 newPositionRijInput.value="";
 newPositionStijlInput.value="";
 newPositionStiftInput.value="";
+newDikaderSelect.value="";
+refreshNewDikaderOptions();
 saveState();
 }
 
@@ -458,8 +471,22 @@ items.push("ISRA");
 return items;
 }
 
+function getRouteItemsForNewPosition(){
+return getRouteItems().filter(item=>item!=="ISRA");
+}
+
+function lastRouteItemBeforeIsra(){
+const items=getRouteItemsForNewPosition();
+return items.length?items[items.length-1]:"";
+}
+
+function canChangeDikaderAtNewPosition(){
+return newPositionSelect.value&&newPositionSelect.value===lastRouteItemBeforeIsra();
+}
+
 function refreshRouteOptions(){
 const items=getRouteItems();
+const newItems=getRouteItemsForNewPosition();
 const oldPosition=positionSelect.value;
 const oldDirection=directionSelect.value;
 const oldNewPosition=newPositionSelect.value;
@@ -471,15 +498,16 @@ option.value=item;
 option.textContent=item;
 positionSelect.appendChild(option);
 });
-items.forEach(item=>{
+newItems.forEach(item=>{
 const option=document.createElement("option");
 option.value=item;
 option.textContent=item;
 newPositionSelect.appendChild(option);
 });
 if(items.includes(oldPosition))positionSelect.value=oldPosition;
-if(items.includes(oldNewPosition))newPositionSelect.value=oldNewPosition;
+if(newItems.includes(oldNewPosition))newPositionSelect.value=oldNewPosition;
 refreshDirectionOptions(oldDirection);
+refreshNewDikaderOptions();
 }
 
 function refreshDirectionOptions(preferredValue){
@@ -512,6 +540,21 @@ lclServiceSelect.appendChild(option);
 });
 if([...lclServiceSelect.options].some(option=>option.value===currentLcl))lclServiceSelect.value=currentLcl;
 refreshLclInfo();
+refreshDikaderOptions();
+refreshNewDikaderOptions();
+}
+
+function getAvailableDikaders(allowCurrent){
+const currentService=serviceInput.value.trim();
+const currentDikader=state.services[currentService]||"";
+const usedByOtherServices=Object.entries(state.services).filter(([id])=>id!==currentService).map(([,dikader])=>dikader);
+const values=[];
+if(allowCurrent&&currentDikader)values.push(currentDikader);
+for(let i=1;i<=20;i++){
+const value="dik"+i;
+if(!usedByOtherServices.includes(value)&&!values.includes(value))values.push(value);
+}
+return values;
 }
 
 function refreshDikaderOptions(){
@@ -524,20 +567,52 @@ option.textContent=state.services[id];
 dikaderSelect.appendChild(option);
 dikaderSelect.disabled=true;
 dikaderNote.textContent="Deze Service ID is vast gekoppeld aan "+state.services[id]+".";
+refreshNewDikaderOptions();
 return;
 }
-const used=Object.values(state.services);
-for(let i=1;i<=20;i++){
-const value="dik"+i;
-if(!used.includes(value)){
+getAvailableDikaders(false).forEach(value=>{
 const option=document.createElement("option");
 option.value=value;
 option.textContent=value;
 dikaderSelect.appendChild(option);
-}
-}
+});
 dikaderSelect.disabled=false;
 dikaderNote.textContent="Na de eerste scan wordt deze dikader vast gekoppeld aan deze Service ID.";
+refreshNewDikaderOptions();
+}
+
+function refreshNewDikaderOptions(){
+const enabled=canChangeDikaderAtNewPosition();
+
+if(!enabled){
+newDikaderBlock.classList.add("hidden");
+newDikaderSelect.value="";
+newDikaderNote.textContent="";
+return;
+}
+
+newDikaderBlock.classList.remove("hidden");
+
+const oldValue=newDikaderSelect.value;
+newDikaderSelect.innerHTML="";
+
+const emptyOption=document.createElement("option");
+emptyOption.value="";
+emptyOption.textContent="Geen nieuwe dikader";
+newDikaderSelect.appendChild(emptyOption);
+
+getAvailableDikaders(true).forEach(value=>{
+const option=document.createElement("option");
+option.value=value;
+option.textContent=value;
+newDikaderSelect.appendChild(option);
+});
+
+if([...newDikaderSelect.options].some(option=>option.value===oldValue)){
+newDikaderSelect.value=oldValue;
+}
+
+newDikaderNote.textContent="Nieuwe dikader is toegestaan op deze laatste positie vóór ISRA.";
 }
 
 function refreshLclInfo(){
@@ -581,6 +656,7 @@ function validateBeforeScan(){
 if(!serviceInput.value.trim()){alert("Vul eerst een Service ID in.");return false}
 if(!dikaderSelect.value){alert("Kies eerst een vrije dikader.");return false}
 if(!positionSelect.value||!directionSelect.value){alert("Kies eerst positie en richting.");return false}
+if(hasNewPositionInput()&&newDikaderSelect.value&&!canChangeDikaderAtNewPosition()){alert("Nieuwe dikader kan alleen op de laatste HVD of KVD vóór ISRA worden geselecteerd.");return false}
 return true;
 }
 
@@ -612,8 +688,15 @@ activeScanner.stop().then(()=>activeScanner.clear()).catch(()=>{}).finally(()=>{
 function handleScannedArgusText(raw){
 const id=serviceInput.value.trim();
 const selectedDikader=dikaderSelect.value;
-if(!state.services[id])state.services[id]=selectedDikader;
 const isNewPosition=hasNewPositionInput();
+const selectedNewDikader=isNewPosition&&canChangeDikaderAtNewPosition()?newDikaderSelect.value:"";
+
+if(selectedNewDikader){
+state.services[id]=selectedNewDikader;
+}else if(!state.services[id]){
+state.services[id]=selectedDikader;
+}
+
 const item={
 type:isNewPosition?"newPosition":"normal",
 serviceId:id,
@@ -622,10 +705,13 @@ position:positionSelect.value,
 direction:directionSelect.value,
 parsed:parseArgusText(raw)
 };
+
 if(isNewPosition){
 item.newPosition=newPositionSelect.value;
 item.newRegistration=formatNewPositionRegistration();
+item.newDikader=selectedNewDikader||"";
 }
+
 state.measurements.push(item);
 refreshServices();
 refreshDikaderOptions();
@@ -650,10 +736,12 @@ lines.push(indexLabel);
 if(item.type==="newPosition"){
 lines.push("Nieuwe positie : "+item.newPosition+(item.newRegistration?" | "+item.newRegistration:""));
 lines.push("Oude positie   : "+item.position);
+if(item.newDikader)lines.push("Nieuwe dikader : "+item.newDikader);
 }else{
 lines.push("Positie        : "+item.position);
 }
 lines.push("Richting       : "+item.direction);
+lines.push("Dikader        : "+item.dikader);
 lines.push("Lengte         : "+item.parsed.length);
 lines.push("ΔC             : "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");
 lines.push("");
@@ -811,10 +899,11 @@ WERKVOLGORDE
 7. Richting kiezen.
 8. Argus QR-code scannen.
 9. Bij slechte ader Nieuwe positie invullen.
-10. Daarna opnieuw dezelfde Scan Argus QR-code knop gebruiken.
-11. Eventueel LCL toevoegen.
-12. Tekstdocument controleren.
-13. Tekst kopiëren of QR-code maken.`);
+10. Nieuwe dikader verschijnt alleen bij laatste HVD of KVD vóór ISRA.
+11. Daarna opnieuw dezelfde Scan Argus QR-code knop gebruiken.
+12. Eventueel LCL toevoegen.
+13. Tekstdocument controleren.
+14. Tekst kopiëren of QR-code maken.`);
 });
 document.getElementById("darkModeButton").addEventListener("click",()=>setTheme("dark"));
 document.getElementById("lightModeButton").addEventListener("click",()=>setTheme("light"));
@@ -836,11 +925,12 @@ document.getElementById("clearNewPositionButton").addEventListener("click",clear
 
 hvdInput.addEventListener("input",()=>{state.hvd=hvdInput.value.trim().toUpperCase();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});
 positionSelect.addEventListener("change",()=>refreshDirectionOptions());
-serviceInput.addEventListener("input",refreshDikaderOptions);
+serviceInput.addEventListener("input",()=>{refreshDikaderOptions();refreshNewDikaderOptions()});
 newPositionRijInput.addEventListener("input",saveState);
 newPositionStijlInput.addEventListener("input",saveState);
 newPositionStiftInput.addEventListener("input",saveState);
-newPositionSelect.addEventListener("change",saveState);
+newPositionSelect.addEventListener("change",()=>{refreshNewDikaderOptions();saveState()});
+newDikaderSelect.addEventListener("change",saveState);
 lclServiceSelect.addEventListener("change",refreshLclInfo);
 
 loadState();
