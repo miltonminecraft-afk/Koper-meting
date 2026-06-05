@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopermetingen</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--panel2:#eef1f7;--text:#10141d;--muted:#667085;--border:#d6dbe6;--accent:#0b66d8;--danger:#c91d1d;--success:#148a42;--input:#fff}
+body.dark{--bg:#07090d;--panel:#11151d;--panel2:#0c0f15;--text:#f4f6fb;--muted:#a8afbd;--border:#2a303c;--accent:#e02020;--danger:#e02020;--success:#159947;--input:#090c12}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.app{min-height:100vh;padding:18px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+h1{margin:0;font-size:30px}
+.icon-bar{display:flex;gap:10px;position:relative}
+.icon-button{width:46px;height:46px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;font-size:22px;cursor:pointer}
+.settings{display:none;position:absolute;right:0;top:54px;width:310px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;z-index:20;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.settings.open{display:block}
+.settings h3{margin:0 0 10px 0}
+.settings-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);color:var(--accent);font-weight:bold}
+.setting-row{display:flex;justify-content:space-between;padding:10px;border-radius:8px;cursor:pointer}
+.setting-row:hover{background:var(--panel2)}
+.layout{display:grid;gap:14px}
+body.page-layout-horizontal .layout{grid-template-columns:420px 1fr}
+body.page-layout-vertical .layout{grid-template-columns:1fr}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 14px 0;color:var(--accent);font-size:20px}
+label{display:block;margin:12px 0 6px 0;font-weight:bold}
+input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:16px}
+input:disabled,select:disabled{opacity:.75}
+textarea{resize:vertical;font-family:"Courier New",monospace}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.kvd-row{display:grid;grid-template-columns:1fr 54px;gap:8px;align-items:end;margin-top:12px}
+.route-info-block{border-top:1px solid var(--border);padding-top:12px;margin-top:12px}
+.route-info-title{color:var(--accent);font-weight:bold;margin-top:6px}
+button{border:0;border-radius:8px;padding:13px 14px;font-size:16px;font-weight:bold;cursor:pointer}
+.primary{background:var(--danger);color:white}
+.success{background:var(--success);color:white}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+.blue{background:#0b66d8;color:white}
+.full{width:100%;margin-top:14px}
+.note{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.4}
+.document-card{height:calc(100vh - 110px);display:flex;flex-direction:column}
+body.page-layout-vertical .document-card{height:auto}
+.document-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.document-header h2{margin:0}
+.document{flex:1;min-height:520px;white-space:pre;overflow:auto;resize:none;font-size:15px;line-height:1.45}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.modal{position:fixed;inset:0;display:none;background:rgba(0,0,0,.72);align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.open{display:flex}
+.modal-box{width:min(640px,100%);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.modal-box h2{margin-top:0}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+#reader{width:100%;min-height:280px;overflow:hidden;border-radius:10px;background:#000}
+.qr-box{background:white;color:black;border-radius:10px;padding:20px;text-align:center;overflow:auto}
+.qr-box canvas{max-width:100%;height:auto}
+@media(max-width:900px){body.page-layout-horizontal .layout{grid-template-columns:1fr}.document-card{height:auto}.document{min-height:520px}.actions,.grid,.grid-three{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="dark page-layout-horizontal">
+<div class="app">
+<div class="header">
+<h1>KOPERMETINGEN</h1>
+<div class="icon-bar">
+<button class="icon-button" id="helpButton">?</button>
+<button class="icon-button" id="settingsButton">⚙</button>
+<div class="settings" id="settingsPanel">
+<h3>Instellingen</h3>
+<div class="setting-row" id="darkModeButton"><span>Dark Side</span><span id="darkCheck">✓</span></div>
+<div class="setting-row" id="lightModeButton"><span>Light Side</span><span id="lightCheck"></span></div>
+<div class="settings-section">Pagina-layout</div>
+<div class="setting-row" id="pageHorizontalButton"><span>Horizontaal</span><span id="pageHorizontalCheck">✓</span></div>
+<div class="setting-row" id="pageVerticalButton"><span>Verticaal</span><span id="pageVerticalCheck"></span></div>
+<div class="settings-section">Verwijderen</div>
+<div class="setting-row" id="clearDocumentButton"><span>Document legen</span><span></span></div>
+<div class="setting-row" id="clearAllButton"><span>Alles legen</span><span></span></div>
+</div>
+</div>
+</div>
+
+<div class="layout">
+<div>
+<div class="card">
+<h2>ROUTE</h2>
+<label>HVD</label>
+<input id="hvdInput" placeholder="Hoofdverdeler">
+<div id="kvdContainer"></div>
+<button class="secondary full" id="addKvdButton" type="button">+ KVD toevoegen</button>
+<div class="note">HVD mag leeg blijven. KVD is optioneel. ISRA wordt automatisch toegevoegd.</div>
+</div>
+
+<div class="card">
+<h2>ROUTE INFO</h2>
+<button class="secondary full" id="toggleRouteInfoButton" type="button">+ Route info weergeven</button>
+<div id="routeInfoPanel" style="display:none;"></div>
+</div>
+
+<div class="card">
+<h2>METING</h2>
+<label>Service ID</label>
+<input id="serviceInput" list="serviceList" placeholder="Kies of voer Service ID in">
+<datalist id="serviceList"></datalist>
+<label>Dikader</label>
+<select id="dikaderSelect"></select>
+<div id="dikaderNote" class="note"></div>
+<div class="grid">
+<div><label>Positie</label><select id="positionSelect"></select></div>
+<div><label>Richting</label><select id="directionSelect"></select></div>
+</div>
+<button class="primary full" id="scanButton">Scan Argus QR-code</button>
+</div>
+
+<div class="card">
+<h2>NIEUWE POSITIE</h2>
+<label>Nieuwe positie</label>
+<select id="newPositionSelect"></select>
+<div class="grid-three">
+<div><label>Rij</label><input id="newPositionRijInput" placeholder="000"></div>
+<div><label>Stijl</label><input id="newPositionStijlInput" placeholder="000"></div>
+<div><label>Stift</label><input id="newPositionStiftInput" placeholder="000"></div>
+</div>
+<div class="note">Vul dit alleen in als de ader slecht meet. De eerstvolgende normale Argus scan wordt dan als Nieuwe positie in het tekstdocument gezet. Laat deze velden leeg voor een normale meting.</div>
+<button class="secondary full" id="clearNewPositionButton">Nieuwe positie leegmaken</button>
+</div>
+
+<div class="card">
+<h2>LCL-METING</h2>
+<label>Service ID</label>
+<select id="lclServiceSelect"></select>
+<div id="lclInfo" class="note"></div>
+<label>LCL</label>
+<div class="grid">
+<input id="lclInput" type="number" step="0.1" placeholder="-">
+<input value="dBm" disabled>
+</div>
+<button class="success full" id="saveLclButton">Opslaan LCL</button>
+</div>
+</div>
+
+<div class="card document-card">
+<div class="document-header">
+<h2>TEKSTDOCUMENT</h2>
+<div id="counterInfo" class="note">0 metingen • 0 LCL</div>
+</div>
+<textarea id="documentOutput" class="document" readonly></textarea>
+<div class="actions">
+<button class="success" id="newMeasurementButton">Nieuwe meting</button>
+<button class="secondary" id="copyButton">Kopieer tekst</button>
+<button class="blue" id="qrButton">Maak QR-code</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="scannerModal">
+<div class="modal-box">
+<h2 id="scannerTitle">Scan Argus QR-code</h2>
+<div id="reader"></div>
+<div class="modal-actions">
+<button class="secondary" id="cancelScannerButton">Annuleren</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+<h2 id="confirmTitle"></h2>
+<div id="confirmText"></div>
+<div class="modal-actions">
+<button class="secondary" id="cancelConfirmButton">Annuleren</button>
+<button class="primary" id="acceptConfirmButton">Bevestigen</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="qrModal">
+<div class="modal-box">
+<h2>QR-code van tekstdocument</h2>
+<div class="qr-box" id="qrOutput"></div>
+<div class="modal-actions">
+<button class="secondary" id="closeQrButton">Sluiten</button>
+</div>
+</div>
+</div>
+
+<script>
+const state={
+theme:"dark",
+pageLayout:"horizontal",
+hvd:"",
+kvds:[],
+routeInfoVisible:false,
+routeInfo:{hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]},
+services:{},
+measurements:[],
+lcls:{}
+};
+
+let activeScanner=null;
+
+const hvdInput=document.getElementById("hvdInput");
+const kvdContainer=document.getElementById("kvdContainer");
+const routeInfoPanel=document.getElementById("routeInfoPanel");
+const toggleRouteInfoButton=document.getElementById("toggleRouteInfoButton");
+const serviceInput=document.getElementById("serviceInput");
+const serviceList=document.getElementById("serviceList");
+const dikaderSelect=document.getElementById("dikaderSelect");
+const dikaderNote=document.getElementById("dikaderNote");
+const positionSelect=document.getElementById("positionSelect");
+const directionSelect=document.getElementById("directionSelect");
+const newPositionSelect=document.getElementById("newPositionSelect");
+const newPositionRijInput=document.getElementById("newPositionRijInput");
+const newPositionStijlInput=document.getElementById("newPositionStijlInput");
+const newPositionStiftInput=document.getElementById("newPositionStiftInput");
+const documentOutput=document.getElementById("documentOutput");
+const counterInfo=document.getElementById("counterInfo");
+const lclServiceSelect=document.getElementById("lclServiceSelect");
+const lclInfo=document.getElementById("lclInfo");
+const lclInput=document.getElementById("lclInput");
+const settingsPanel=document.getElementById("settingsPanel");
+const confirmModal=document.getElementById("confirmModal");
+const confirmTitle=document.getElementById("confirmTitle");
+const confirmText=document.getElementById("confirmText");
+const acceptConfirmButton=document.getElementById("acceptConfirmButton");
+const scannerModal=document.getElementById("scannerModal");
+const scannerTitle=document.getElementById("scannerTitle");
+const qrModal=document.getElementById("qrModal");
+const qrOutput=document.getElementById("qrOutput");
+
+function emptyVInfo(){return{sipStijl:"",sipStift:"",vStijl:"",vStift:""}}
+
+function saveState(){
+state.hvd=hvdInput.value.trim().toUpperCase();
+localStorage.setItem("kopermetingen",JSON.stringify(state));
+}
+
+function loadState(){
+const stored=localStorage.getItem("kopermetingen");
+if(stored){try{const parsed=JSON.parse(stored);if(parsed&&typeof parsed==="object")Object.assign(state,parsed)}catch(error){}}
+if(!Array.isArray(state.kvds))state.kvds=[];
+if(!state.services)state.services={};
+if(!state.measurements)state.measurements=[];
+if(!state.lcls)state.lcls={};
+if(!state.theme)state.theme="dark";
+if(!state.pageLayout)state.pageLayout="horizontal";
+if(!state.routeInfo)state.routeInfo={};
+if(!state.routeInfo.hvd)state.routeInfo.hvd={hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""};
+["hRij","hStijl","hStift","vRij","vStijl","vStift"].forEach(key=>{if(!(key in state.routeInfo.hvd))state.routeInfo.hvd[key]=""});
+if(!Array.isArray(state.routeInfo.kvds))state.routeInfo.kvds=[];
+while(state.routeInfo.kvds.length<state.kvds.length)state.routeInfo.kvds.push(emptyVInfo());
+state.routeInfo.kvds.forEach(info=>{["sipStijl","sipStift","vStijl","vStift"].forEach(key=>{if(!(key in info))info[key]=""})});
+}
+
+function setTheme(value){
+state.theme=value;
+document.body.classList.toggle("dark",value==="dark");
+document.getElementById("darkCheck").textContent=value==="dark"?"✓":"";
+document.getElementById("lightCheck").textContent=value==="light"?"✓":"";
+saveState();
+}
+
+function setPageLayout(value){
+state.pageLayout=value;
+document.body.classList.toggle("page-layout-horizontal",value==="horizontal");
+document.body.classList.toggle("page-layout-vertical",value==="vertical");
+document.getElementById("pageHorizontalCheck").textContent=value==="horizontal"?"✓":"";
+document.getElementById("pageVerticalCheck").textContent=value==="vertical"?"✓":"";
+saveState();
+}
+
+function renderKvds(){
+kvdContainer.innerHTML="";
+state.kvds.forEach((value,index)=>{
+const row=document.createElement("div");
+row.className="kvd-row";
+const field=document.createElement("div");
+const label=document.createElement("label");
+label.textContent="KVD "+(index+1);
+const input=document.createElement("input");
+input.value=value||"";
+input.placeholder="AA meer";
+input.addEventListener("input",()=>{
+state.kvds[index]=input.value.trim().toUpperCase();
+refreshRouteOptions();
+renderRouteInfo();
+refreshDocument();
+saveState();
+});
+const removeButton=document.createElement("button");
+removeButton.className="secondary";
+removeButton.type="button";
+removeButton.textContent="×";
+removeButton.addEventListener("click",()=>{
+state.kvds.splice(index,1);
+state.routeInfo.kvds.splice(index,1);
+renderKvds();
+refreshRouteOptions();
+renderRouteInfo();
+refreshDocument();
+saveState();
+});
+field.appendChild(label);
+field.appendChild(input);
+row.appendChild(field);
+row.appendChild(removeButton);
+kvdContainer.appendChild(row);
+});
+}
+
+function addKvd(){
+state.kvds.push("");
+state.routeInfo.kvds.push(emptyVInfo());
+renderKvds();
+refreshRouteOptions();
+renderRouteInfo();
+refreshDocument();
+saveState();
+}
+
+function firstFilledKvdIndex(){
+return state.kvds.findIndex(name=>String(name||"").trim());
+}
+
+function kvdNeedsSip(index){
+return !hvdInput.value.trim()&&firstFilledKvdIndex()===index;
+}
+
+function setRouteInfoValue(type,index,key,value){
+if(type==="hvd")state.routeInfo.hvd[key]=value.trim().toUpperCase();
+else{
+if(!state.routeInfo.kvds[index])state.routeInfo.kvds[index]=emptyVInfo();
+state.routeInfo.kvds[index][key]=value.trim().toUpperCase();
+}
+refreshDocument();
+saveState();
+}
+
+function renderRouteInfo(){
+routeInfoPanel.style.display=state.routeInfoVisible?"block":"none";
+toggleRouteInfoButton.textContent=state.routeInfoVisible?"− Route info verbergen":"+ Route info weergeven";
+routeInfoPanel.innerHTML="";
+if(!state.routeInfoVisible)return;
+
+if(hvdInput.value.trim()){
+const block=document.createElement("div");
+block.className="route-info-block";
+block.innerHTML=`
+<div class="route-info-title">HVD registratie</div>
+<div class="route-info-title">H positie</div>
+<div class="grid-three">
+<div><label>H rij</label><input value="${escapeHtml(state.routeInfo.hvd.hRij)}" placeholder="000" data-route-info="hvd" data-key="hRij"></div>
+<div><label>H stijl</label><input value="${escapeHtml(state.routeInfo.hvd.hStijl)}" placeholder="001" data-route-info="hvd" data-key="hStijl"></div>
+<div><label>H stift</label><input value="${escapeHtml(state.routeInfo.hvd.hStift)}" placeholder="001" data-route-info="hvd" data-key="hStift"></div>
+</div>
+<div class="route-info-title">V positie</div>
+<div class="grid-three">
+<div><label>V rij</label><input value="${escapeHtml(state.routeInfo.hvd.vRij)}" placeholder="000" data-route-info="hvd" data-key="vRij"></div>
+<div><label>V stijl</label><input value="${escapeHtml(state.routeInfo.hvd.vStijl)}" placeholder="001" data-route-info="hvd" data-key="vStijl"></div>
+<div><label>V stift</label><input value="${escapeHtml(state.routeInfo.hvd.vStift)}" placeholder="001" data-route-info="hvd" data-key="vStift"></div>
+</div>`;
+routeInfoPanel.appendChild(block);
+}
+
+state.kvds.forEach((name,index)=>{
+if(!String(name||"").trim())return;
+if(!state.routeInfo.kvds[index])state.routeInfo.kvds[index]=emptyVInfo();
+const info=state.routeInfo.kvds[index];
+const showSip=kvdNeedsSip(index);
+const block=document.createElement("div");
+block.className="route-info-block";
+block.innerHTML=`
+<div class="route-info-title">KVD ${index+1} registratie</div>
+<div class="grid">
+${showSip?`
+<div><label>SIP stijl</label><input value="${escapeHtml(info.sipStijl)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStijl"></div>
+<div><label>SIP stift</label><input value="${escapeHtml(info.sipStift)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStift"></div>`:""}
+<div><label>V stijl</label><input value="${escapeHtml(info.vStijl)}" placeholder="001" data-route-info="kvd" data-index="${index}" data-key="vStijl"></div>
+<div><label>V stift</label><input value="${escapeHtml(info.vStift)}" placeholder="001" data-route-info="kvd" data-index="${index}" data-key="vStift"></div>
+</div>`;
+routeInfoPanel.appendChild(block);
+});
+
+routeInfoPanel.querySelectorAll("[data-route-info]").forEach(input=>{
+input.addEventListener("input",()=>{
+const type=input.getAttribute("data-route-info");
+const key=input.getAttribute("data-key");
+const index=Number(input.getAttribute("data-index")||0);
+setRouteInfoValue(type,index,key,input.value);
+});
+});
+}
+
+function formatRouteNumber(value){
+const number=String(value||"").replace(/\D/g,"");
+return number?number.padStart(3,"0"):"---";
+}
+
+function formatSip(info){
+if(!info||(!info.sipStijl&&!info.sipStift))return"";
+return"SIP "+formatRouteNumber(info.sipStijl)+" "+formatRouteNumber(info.sipStift);
+}
+
+function formatH(info){
+if(!info||(!info.hRij&&!info.hStijl&&!info.hStift))return"";
+return formatRouteNumber(info.hRij)+" "+formatRouteNumber(info.hStijl)+" "+formatRouteNumber(info.hStift);
+}
+
+function formatV(info){
+if(!info||(!info.vRij&&!info.vStijl&&!info.vStift))return"";
+return formatRouteNumber(info.vRij)+" "+formatRouteNumber(info.vStijl)+" "+formatRouteNumber(info.vStift);
+}
+
+function formatKvdV(info){
+if(!info||(!info.vStijl&&!info.vStift))return"";
+return formatRouteNumber(info.vStijl)+" "+formatRouteNumber(info.vStift);
+}
+
+function formatHvdRouteInfo(){
+const h=formatH(state.routeInfo.hvd);
+const v=formatV(state.routeInfo.hvd);
+const parts=[h,v].filter(Boolean);
+return parts.length?" | "+parts.join(" → "):"";
+}
+
+function formatKvdRouteInfo(index){
+const info=state.routeInfo.kvds[index];
+const sip=kvdNeedsSip(index)?formatSip(info):"";
+const v=formatKvdV(info);
+const parts=[sip,v].filter(Boolean);
+return parts.length?" | "+parts.join(" → "):"";
+}
+
+function formatNewPositionRegistration(){
+if(!newPositionRijInput.value&&!newPositionStijlInput.value&&!newPositionStiftInput.value)return"";
+return[formatRouteNumber(newPositionRijInput.value),formatRouteNumber(newPositionStijlInput.value),formatRouteNumber(newPositionStiftInput.value)].join(" ");
+}
+
+function hasNewPositionInput(){
+return Boolean(newPositionSelect.value&&(newPositionRijInput.value||newPositionStijlInput.value||newPositionStiftInput.value));
+}
+
+function clearNewPosition(){
+newPositionRijInput.value="";
+newPositionStijlInput.value="";
+newPositionStiftInput.value="";
+saveState();
+}
+
+function getRouteItems(){
+const items=[];
+const hvdValue=hvdInput.value.trim().toUpperCase();
+if(hvdValue)items.push("HVD "+hvdValue);
+state.kvds.map(value=>String(value||"").trim().toUpperCase()).filter(Boolean).forEach(value=>items.push("KVD "+value));
+items.push("ISRA");
+return items;
+}
+
+function refreshRouteOptions(){
+const items=getRouteItems();
+const oldPosition=positionSelect.value;
+const oldDirection=directionSelect.value;
+const oldNewPosition=newPositionSelect.value;
+positionSelect.innerHTML="";
+newPositionSelect.innerHTML="";
+items.forEach(item=>{
+const option=document.createElement("option");
+option.value=item;
+option.textContent=item;
+positionSelect.appendChild(option);
+});
+items.forEach(item=>{
+const option=document.createElement("option");
+option.value=item;
+option.textContent=item;
+newPositionSelect.appendChild(option);
+});
+if(items.includes(oldPosition))positionSelect.value=oldPosition;
+if(items.includes(oldNewPosition))newPositionSelect.value=oldNewPosition;
+refreshDirectionOptions(oldDirection);
+}
+
+function refreshDirectionOptions(preferredValue){
+const items=getRouteItems();
+const selectedPosition=positionSelect.value;
+directionSelect.innerHTML="";
+items.filter(item=>item!==selectedPosition).forEach(item=>{
+const option=document.createElement("option");
+option.value=item;
+option.textContent=item;
+directionSelect.appendChild(option);
+});
+if([...directionSelect.options].some(option=>option.value===preferredValue))directionSelect.value=preferredValue;
+}
+
+function refreshServices(){
+serviceList.innerHTML="";
+Object.keys(state.services).forEach(id=>{
+const option=document.createElement("option");
+option.value=id;
+serviceList.appendChild(option);
+});
+const currentLcl=lclServiceSelect.value;
+lclServiceSelect.innerHTML="";
+Object.keys(state.services).forEach(id=>{
+const option=document.createElement("option");
+option.value=id;
+option.textContent=id+" ("+state.services[id]+")";
+lclServiceSelect.appendChild(option);
+});
+if([...lclServiceSelect.options].some(option=>option.value===currentLcl))lclServiceSelect.value=currentLcl;
+refreshLclInfo();
+}
+
+function refreshDikaderOptions(){
+const id=serviceInput.value.trim();
+dikaderSelect.innerHTML="";
+if(id&&state.services[id]){
+const option=document.createElement("option");
+option.value=state.services[id];
+option.textContent=state.services[id];
+dikaderSelect.appendChild(option);
+dikaderSelect.disabled=true;
+dikaderNote.textContent="Deze Service ID is vast gekoppeld aan "+state.services[id]+".";
+return;
+}
+const used=Object.values(state.services);
+for(let i=1;i<=20;i++){
+const value="dik"+i;
+if(!used.includes(value)){
+const option=document.createElement("option");
+option.value=value;
+option.textContent=value;
+dikaderSelect.appendChild(option);
+}
+}
+dikaderSelect.disabled=false;
+dikaderNote.textContent="Na de eerste scan wordt deze dikader vast gekoppeld aan deze Service ID.";
+}
+
+function refreshLclInfo(){
+const id=lclServiceSelect.value;
+lclInfo.textContent=id?"Gekoppelde dikader: "+state.services[id]:"Nog geen Service ID opgeslagen.";
+}
+
+function parseArgusText(raw){
+const result={length:"-",deltaAbs:"-",deltaRel:"-",isolation:["-","-","-"],capacity:["-","-","-"],dc:["-","-","-"],ac:["-","-","-"],raw:raw};
+const text=String(raw||"").replace(/\r/g,"\n").replace(/,/g,".");
+const lines=text.split(/\n+/).map(line=>line.trim()).filter(Boolean);
+lines.forEach(line=>{
+const parts=line.split(";").map(part=>part.trim());
+const key=(parts[0]||"").toLowerCase();
+if(key==="dc"&&parts.length>=4)result.dc=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
+if(key==="ac"&&parts.length>=4)result.ac=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
+if((key==="riso"||key==="iso")&&parts.length>=4)result.isolation=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
+if((key==="l"||key==="length")&&parts.length>=2)result.length=cleanValue(parts[1]);
+if((key==="cab"||key==="cm(ab)")&&parts.length>=2)result.capacity[0]=cleanValue(parts[1]);
+if((key==="cag"||key==="ca-g")&&parts.length>=2)result.capacity[1]=cleanValue(parts[1]);
+if((key==="cbg"||key==="cb-g")&&parts.length>=2)result.capacity[2]=cleanValue(parts[1]);
+if((key==="deltac"||key==="deltacab(abs)")&&parts.length>=2)result.deltaAbs=cleanValue(parts[1]);
+if((key==="deltac%"||key==="deltacab(rel)")&&parts.length>=2)result.deltaRel=cleanValue(parts[1]);
+});
+return result;
+}
+
+function cleanValue(value){
+return String(value||"-").replace(/MOhm/gi,"MΩ").replace(/mOhm/gi,"mΩ").replace(/pct/gi,"%").trim();
+}
+
+function normalizeLcl(value){
+const cleaned=String(value||"").replace(",",".").replace("dBm","").trim();
+if(!cleaned)return"";
+const numeric=Number(cleaned);
+if(Number.isNaN(numeric))return"";
+return"-"+Math.abs(numeric).toFixed(1)+" dBm";
+}
+
+function validateBeforeScan(){
+if(!serviceInput.value.trim()){alert("Vul eerst een Service ID in.");return false}
+if(!dikaderSelect.value){alert("Kies eerst een vrije dikader.");return false}
+if(!positionSelect.value||!directionSelect.value){alert("Kies eerst positie en richting.");return false}
+return true;
+}
+
+function startScanner(){
+scannerTitle.textContent="Scan Argus QR-code";
+scannerModal.classList.add("open");
+if(activeScanner)stopScanner();
+activeScanner=new Html5Qrcode("reader");
+activeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},decodedText=>{
+stopScanner();
+scannerModal.classList.remove("open");
+handleScannedArgusText(decodedText);
+}).catch(()=>{
+scannerModal.classList.remove("open");
+alert("Camera kon niet worden geopend. Test via HTTPS, localhost of APK en geef cameratoegang.");
+});
+}
+
+function startArgusScan(){
+if(!validateBeforeScan())return;
+startScanner();
+}
+
+function stopScanner(){
+if(!activeScanner)return;
+activeScanner.stop().then(()=>activeScanner.clear()).catch(()=>{}).finally(()=>{activeScanner=null});
+}
+
+function handleScannedArgusText(raw){
+const id=serviceInput.value.trim();
+const selectedDikader=dikaderSelect.value;
+if(!state.services[id])state.services[id]=selectedDikader;
+const isNewPosition=hasNewPositionInput();
+const item={
+type:isNewPosition?"newPosition":"normal",
+serviceId:id,
+dikader:state.services[id],
+position:positionSelect.value,
+direction:directionSelect.value,
+parsed:parseArgusText(raw)
+};
+if(isNewPosition){
+item.newPosition=newPositionSelect.value;
+item.newRegistration=formatNewPositionRegistration();
+}
+state.measurements.push(item);
+refreshServices();
+refreshDikaderOptions();
+refreshDocument();
+saveState();
+}
+
+function saveLcl(){
+const id=lclServiceSelect.value;
+const value=normalizeLcl(lclInput.value);
+if(!id){alert("Er is nog geen Service ID beschikbaar. Scan eerst een Argus meting.");return}
+if(!value){alert("Vul eerst een LCL waarde in.");return}
+state.lcls[id]=value;
+lclInput.value="";
+refreshDocument();
+saveState();
+}
+
+function writeMeasurement(lines,item,indexLabel){
+lines.push("");
+lines.push(indexLabel);
+if(item.type==="newPosition"){
+lines.push("Nieuwe positie : "+item.newPosition+(item.newRegistration?" | "+item.newRegistration:""));
+lines.push("Oude positie   : "+item.position);
+}else{
+lines.push("Positie        : "+item.position);
+}
+lines.push("Richting       : "+item.direction);
+lines.push("Lengte         : "+item.parsed.length);
+lines.push("ΔC             : "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");
+lines.push("");
+lines.push("Isolatie");
+lines.push("a-b            : "+item.parsed.isolation[0]);
+lines.push("a-G            : "+item.parsed.isolation[1]);
+lines.push("b-G            : "+item.parsed.isolation[2]);
+lines.push("");
+lines.push("Capaciteit");
+lines.push("a-b            : "+item.parsed.capacity[0]);
+lines.push("a-G            : "+item.parsed.capacity[1]);
+lines.push("b-G            : "+item.parsed.capacity[2]);
+lines.push("");
+lines.push("DC");
+lines.push("a-b            : "+item.parsed.dc[0]);
+lines.push("a-G            : "+item.parsed.dc[1]);
+lines.push("b-G            : "+item.parsed.dc[2]);
+lines.push("");
+lines.push("AC");
+lines.push("a-b            : "+item.parsed.ac[0]);
+lines.push("a-G            : "+item.parsed.ac[1]);
+lines.push("b-G            : "+item.parsed.ac[2]);
+}
+
+function refreshDocument(){
+const lines=[];
+lines.push("KOPERMETINGEN");
+lines.push("");
+lines.push("ROUTE");
+lines.push("-----");
+const hvdValue=hvdInput.value.trim().toUpperCase();
+if(hvdValue)lines.push("HVD "+hvdValue+formatHvdRouteInfo());
+state.kvds.forEach((name,index)=>{
+const cleanName=String(name||"").trim().toUpperCase();
+if(cleanName)lines.push("KVD "+cleanName+formatKvdRouteInfo(index));
+});
+lines.push("ISRA");
+lines.push("");
+const serviceIds=Object.keys(state.services).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));
+if(serviceIds.length===0){
+lines.push("Nog geen metingen toegevoegd.");
+documentOutput.value=lines.join("\n");
+counterInfo.textContent="0 metingen • 0 LCL";
+return;
+}
+serviceIds.forEach(id=>{
+const measurements=state.measurements.filter(item=>item.serviceId===id).sort((a,b)=>{
+const positionA=String(a.type==="newPosition"?a.newPosition:a.position);
+const positionB=String(b.type==="newPosition"?b.newPosition:b.position);
+const positionCompare=positionA.localeCompare(positionB,undefined,{numeric:true,sensitivity:"base"});
+if(positionCompare!==0)return positionCompare;
+return String(a.direction||"").localeCompare(String(b.direction||""),undefined,{numeric:true,sensitivity:"base"});
+});
+const lcl=state.lcls[id];
+lines.push("------------------------------------------------------------");
+lines.push("SERVICE ID : "+id);
+lines.push("DIKADER    : "+state.services[id]);
+if(lcl)lines.push("LCL        : "+lcl);
+if(measurements.length===0){lines.push("");return}
+measurements.forEach((item,index)=>{
+writeMeasurement(lines,item,item.type==="newPosition"?"NIEUWE POSITIE "+(index+1):"METING "+(index+1));
+});
+lines.push("");
+});
+documentOutput.value=lines.join("\n");
+counterInfo.textContent=state.measurements.length+" metingen • "+Object.keys(state.lcls).length+" LCL";
+}
+
+function copyDocument(){
+navigator.clipboard.writeText(documentOutput.value).then(()=>alert("Tekst gekopieerd."));
+}
+
+function showQrCode(){
+qrOutput.innerHTML="";
+QRCode.toCanvas(documentOutput.value,{width:360,margin:2},(error,canvas)=>{
+if(error){alert("QR-code maken is mislukt.");return}
+qrOutput.appendChild(canvas);
+qrModal.classList.add("open");
+});
+}
+
+function showConfirm(title,text,action){
+confirmTitle.textContent=title;
+confirmText.textContent=text;
+confirmModal.classList.add("open");
+acceptConfirmButton.onclick=()=>{
+action();
+confirmModal.classList.remove("open");
+};
+}
+
+function clearDocument(){
+state.measurements=[];
+state.lcls={};
+refreshDocument();
+saveState();
+}
+
+function clearAll(){
+state.hvd="";
+state.kvds=[];
+state.routeInfoVisible=false;
+state.routeInfo={hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]};
+state.services={};
+state.measurements=[];
+state.lcls={};
+hvdInput.value="";
+serviceInput.value="";
+lclInput.value="";
+clearNewPosition();
+renderKvds();
+renderRouteInfo();
+refreshRouteOptions();
+refreshServices();
+refreshDikaderOptions();
+refreshDocument();
+saveState();
+}
+
+function escapeHtml(value){
+return String(value||"").replace(/[&<>"']/g,character=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[character]));
+}
+
+document.getElementById("settingsButton").addEventListener("click",()=>settingsPanel.classList.toggle("open"));
+document.getElementById("helpButton").addEventListener("click",()=>{
+alert(`REGELS KOPERMETING
+
+Capaciteit
+Mag niet meer dan 3% of circa 2 nF afwijken tussen A-G en B-G.
+
+Isolatieweerstand
+A-B, A-G en B-G moeten hoger zijn dan 3 MΩ en stabiel zijn.
+
+Langsweerstand
+Maximaal 5 Ω en maximaal 3% verschil.
+
+Vreemde spanning
+Maximaal 3 V DC of 0,25 V AC.
+
+Symmetrie
+Geldt voor zowel capaciteit als langsweerstand.
+
+Lengte
+Van beide kanten meten.
+Verschil maximaal 1%.
+
+WERKVOLGORDE
+
+1. HVD invullen indien aanwezig.
+2. KVD toevoegen indien aanwezig.
+3. Route info weergeven indien nodig.
+4. Service ID kiezen of invoeren.
+5. Dikader kiezen.
+6. Positie kiezen.
+7. Richting kiezen.
+8. Argus QR-code scannen.
+9. Bij slechte ader Nieuwe positie invullen.
+10. Daarna opnieuw dezelfde Scan Argus QR-code knop gebruiken.
+11. Eventueel LCL toevoegen.
+12. Tekstdocument controleren.
+13. Tekst kopiëren of QR-code maken.`);
+});
+document.getElementById("darkModeButton").addEventListener("click",()=>setTheme("dark"));
+document.getElementById("lightModeButton").addEventListener("click",()=>setTheme("light"));
+document.getElementById("pageHorizontalButton").addEventListener("click",()=>setPageLayout("horizontal"));
+document.getElementById("pageVerticalButton").addEventListener("click",()=>setPageLayout("vertical"));
+document.getElementById("clearDocumentButton").addEventListener("click",()=>showConfirm("Document legen","Dit verwijdert alle metingen en LCL-metingen. Route, Service ID's en dikader-koppelingen blijven behouden.",clearDocument));
+document.getElementById("clearAllButton").addEventListener("click",()=>showConfirm("Alles legen","Dit verwijdert alles.",clearAll));
+document.getElementById("cancelConfirmButton").addEventListener("click",()=>confirmModal.classList.remove("open"));
+document.getElementById("scanButton").addEventListener("click",startArgusScan);
+document.getElementById("cancelScannerButton").addEventListener("click",()=>{stopScanner();scannerModal.classList.remove("open")});
+document.getElementById("addKvdButton").addEventListener("click",addKvd);
+document.getElementById("toggleRouteInfoButton").addEventListener("click",()=>{state.routeInfoVisible=!state.routeInfoVisible;renderRouteInfo();saveState()});
+document.getElementById("saveLclButton").addEventListener("click",saveLcl);
+document.getElementById("newMeasurementButton").addEventListener("click",()=>serviceInput.focus());
+document.getElementById("copyButton").addEventListener("click",copyDocument);
+document.getElementById("qrButton").addEventListener("click",showQrCode);
+document.getElementById("closeQrButton").addEventListener("click",()=>qrModal.classList.remove("open"));
+document.getElementById("clearNewPositionButton").addEventListener("click",clearNewPosition);
+
+hvdInput.addEventListener("input",()=>{state.hvd=hvdInput.value.trim().toUpperCase();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});
+positionSelect.addEventListener("change",()=>refreshDirectionOptions());
+serviceInput.addEventListener("input",refreshDikaderOptions);
+newPositionRijInput.addEventListener("input",saveState);
+newPositionStijlInput.addEventListener("input",saveState);
+newPositionStiftInput.addEventListener("input",saveState);
+newPositionSelect.addEventListener("change",saveState);
+lclServiceSelect.addEventListener("change",refreshLclInfo);
+
+loadState();
+hvdInput.value=state.hvd||"";
+renderKvds();
+renderRouteInfo();
+refreshRouteOptions();
+refreshServices();
+refreshDikaderOptions();
+setTheme(state.theme);
+setPageLayout(state.pageLayout);
+refreshDocument();
+</script>
+</body>
+</html>
