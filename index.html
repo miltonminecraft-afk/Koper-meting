@@ -48,7 +48,7 @@ body.page-layout-vertical .document-card{height:auto}
 .document-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .document-header h2{margin:0}
 .document{flex:1;min-height:520px;white-space:pre;overflow:auto;resize:none;font-size:15px;line-height:1.45}
-.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px}
 .modal{position:fixed;inset:0;display:none;background:rgba(0,0,0,.72);align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal.open{display:flex}
 .modal-box{width:min(640px,100%);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
@@ -127,7 +127,7 @@ body.page-layout-vertical .document-card{height:auto}
 <select id="newDikaderSelect"></select>
 <div id="newDikaderNote" class="note"></div>
 </div>
-<div class="note">Bij slechte ader vul je hier de nieuwe registratie in. De eerstvolgende Argus-scan gebruikt deze registratie alleen voor die meting.</div>
+<div class="note">Bij slechte ader vul je hier de nieuwe registratie in. Meet je richting ISRA, noteer dan de registratie van de kast waar je je bevindt. Meet je richting SIP, HVD of een eerdere KVD, noteer dan de V-registratie van de eerstvolgende verdeler in die richting.</div>
 <button class="secondary full" id="clearNewPositionButton">Nieuwe positie leegmaken</button>
 </div>
 
@@ -156,6 +156,7 @@ body.page-layout-vertical .document-card{height:auto}
 <button class="success" id="newMeasurementButton">Nieuwe meting</button>
 <button class="secondary" id="copyButton">Kopieer tekst</button>
 <button class="blue" id="qrButton">Maak QR-code</button>
+<button class="primary" id="routeRestoredButton">Route hersteld</button>
 </div>
 </div>
 </div>
@@ -166,13 +167,13 @@ body.page-layout-vertical .document-card{height:auto}
 <div class="modal" id="qrModal"><div class="modal-box"><h2>QR-code van tekstdocument</h2><div class="qr-box" id="qrOutput"></div><div class="modal-actions"><button class="secondary" id="closeQrButton">Sluiten</button></div></div></div>
 
 <script>
-const state={theme:"dark",pageLayout:"horizontal",hvd:"",kvds:[],routeInfoVisible:false,routeInfo:{hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]},services:{},measurements:[],lcls:[],routeChanges:{}};
+const state={theme:"dark",pageLayout:"horizontal",hvd:"",kvds:[],routeInfoVisible:false,routeInfo:{hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]},services:{},measurements:[],lcls:[],routeChanges:{},routeRestored:{}};
 let activeScanner=null;
 const hvdInput=document.getElementById("hvdInput"),kvdContainer=document.getElementById("kvdContainer"),routeInfoPanel=document.getElementById("routeInfoPanel"),toggleRouteInfoButton=document.getElementById("toggleRouteInfoButton"),serviceInput=document.getElementById("serviceInput"),serviceList=document.getElementById("serviceList"),dikaderSelect=document.getElementById("dikaderSelect"),dikaderNote=document.getElementById("dikaderNote"),positionSelect=document.getElementById("positionSelect"),directionSelect=document.getElementById("directionSelect"),newPositionSelect=document.getElementById("newPositionSelect"),newPositionRijInput=document.getElementById("newPositionRijInput"),newPositionStijlInput=document.getElementById("newPositionStijlInput"),newPositionStiftInput=document.getElementById("newPositionStiftInput"),newDikaderBlock=document.getElementById("newDikaderBlock"),newDikaderSelect=document.getElementById("newDikaderSelect"),newDikaderNote=document.getElementById("newDikaderNote"),documentOutput=document.getElementById("documentOutput"),counterInfo=document.getElementById("counterInfo"),lclServiceSelect=document.getElementById("lclServiceSelect"),lclMeasurementSelect=document.getElementById("lclMeasurementSelect"),lclInput=document.getElementById("lclInput"),settingsPanel=document.getElementById("settingsPanel"),confirmModal=document.getElementById("confirmModal"),confirmTitle=document.getElementById("confirmTitle"),confirmText=document.getElementById("confirmText"),acceptConfirmButton=document.getElementById("acceptConfirmButton"),scannerModal=document.getElementById("scannerModal"),scannerTitle=document.getElementById("scannerTitle"),qrModal=document.getElementById("qrModal"),qrOutput=document.getElementById("qrOutput");
 
 function emptyVInfo(){return{sipStijl:"",sipStift:"",vStijl:"",vStift:""}}
 function saveState(){state.hvd=hvdInput.value.trim().toUpperCase();localStorage.setItem("kopermetingen",JSON.stringify(state))}
-function loadState(){const stored=localStorage.getItem("kopermetingen");if(stored){try{Object.assign(state,JSON.parse(stored))}catch(e){}}if(!Array.isArray(state.kvds))state.kvds=[];if(!state.services)state.services={};if(!Array.isArray(state.measurements))state.measurements=[];if(!Array.isArray(state.lcls)){const old=state.lcls||{};state.lcls=[];Object.keys(old).forEach(id=>state.lcls.push({serviceId:id,measurementId:"",positionText:"",value:old[id]}))}if(!state.routeChanges||Array.isArray(state.routeChanges))state.routeChanges={};if(!state.routeInfo)state.routeInfo={};if(!state.routeInfo.hvd)state.routeInfo.hvd={hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""};["hRij","hStijl","hStift","vRij","vStijl","vStift"].forEach(k=>{if(!(k in state.routeInfo.hvd))state.routeInfo.hvd[k]=""});if(!Array.isArray(state.routeInfo.kvds))state.routeInfo.kvds=[];while(state.routeInfo.kvds.length<state.kvds.length)state.routeInfo.kvds.push(emptyVInfo());state.routeInfo.kvds.forEach(i=>["sipStijl","sipStift","vStijl","vStift"].forEach(k=>{if(!(k in i))i[k]=""}));state.measurements.forEach((m,i)=>{if(!m.id)m.id="m"+Date.now()+"_"+i;if(!m.positionText)m.positionText=buildPositionText(m.position,m.direction,m.dikader);if(!Array.isArray(m.routeChanges))m.routeChanges=[]})}
+function loadState(){const stored=localStorage.getItem("kopermetingen");if(stored){try{Object.assign(state,JSON.parse(stored))}catch(e){}}if(!Array.isArray(state.kvds))state.kvds=[];if(!state.services)state.services={};if(!Array.isArray(state.measurements))state.measurements=[];if(!Array.isArray(state.lcls)){const old=state.lcls||{};state.lcls=[];Object.keys(old).forEach(id=>state.lcls.push({serviceId:id,measurementId:"",routeLine:"",value:old[id]}))}if(!state.routeChanges||Array.isArray(state.routeChanges))state.routeChanges={};if(!state.routeRestored||Array.isArray(state.routeRestored))state.routeRestored={};if(!state.routeInfo)state.routeInfo={};if(!state.routeInfo.hvd)state.routeInfo.hvd={hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""};["hRij","hStijl","hStift","vRij","vStijl","vStift"].forEach(k=>{if(!(k in state.routeInfo.hvd))state.routeInfo.hvd[k]=""});if(!Array.isArray(state.routeInfo.kvds))state.routeInfo.kvds=[];while(state.routeInfo.kvds.length<state.kvds.length)state.routeInfo.kvds.push(emptyVInfo());state.routeInfo.kvds.forEach(i=>["sipStijl","sipStift","vStijl","vStift"].forEach(k=>{if(!(k in i))i[k]=""}));state.measurements.forEach((m,i)=>{if(!m.id)m.id="m"+Date.now()+"_"+i;if(!m.positionText)m.positionText=buildPositionText(m.position,m.direction,m.dikader);if(!Array.isArray(m.routeChanges))m.routeChanges=[]})}
 function setTheme(v){state.theme=v;document.body.classList.toggle("dark",v==="dark");document.getElementById("darkCheck").textContent=v==="dark"?"✓":"";document.getElementById("lightCheck").textContent=v==="light"?"✓":"";saveState()}
 function setPageLayout(v){state.pageLayout=v;document.body.classList.toggle("page-layout-horizontal",v==="horizontal");document.body.classList.toggle("page-layout-vertical",v==="vertical");document.getElementById("pageHorizontalCheck").textContent=v==="horizontal"?"✓":"";document.getElementById("pageVerticalCheck").textContent=v==="vertical"?"✓":"";saveState()}
 function renderKvds(){kvdContainer.innerHTML="";state.kvds.forEach((value,index)=>{const row=document.createElement("div");row.className="kvd-row";const field=document.createElement("div");const label=document.createElement("label");label.textContent="KVD "+(index+1);const input=document.createElement("input");input.value=value||"";input.placeholder="AA meer";input.addEventListener("input",()=>{state.kvds[index]=input.value.trim().toUpperCase();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});const remove=document.createElement("button");remove.className="secondary";remove.type="button";remove.textContent="×";remove.addEventListener("click",()=>{state.kvds.splice(index,1);state.routeInfo.kvds.splice(index,1);renderKvds();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});field.appendChild(label);field.appendChild(input);row.appendChild(field);row.appendChild(remove);kvdContainer.appendChild(row)})}
@@ -192,7 +193,8 @@ function routeLine(name,tag,value){const left=String(name||"").padEnd(routeNameW
 function routeBlank(tag,value){const left="".padEnd(routeNameWidth()," ");const label=String(tag||"").padEnd(3," ");return left+" "+label+" | "+value}
 function hasNewPositionInput(){return Boolean(newPositionSelect.value&&(newPositionRijInput.value||newPositionStijlInput.value||newPositionStiftInput.value))}
 function formatNewPositionValue(){return[formatRouteNumber(newPositionRijInput.value),formatRouteNumber(newPositionStijlInput.value),formatRouteNumber(newPositionStiftInput.value)].join(" ")}
-function buildRouteLines(dikader){const lines=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const h=formatH(state.routeInfo.hvd),v=formatV(state.routeInfo.hvd);if(h)lines.push(routeLine(name,"H",h));else lines.push(name);if(v)lines.push(routeBlank("V",v))}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const name="KVD "+clean;const info=state.routeInfo.kvds[index];const sip=kvdNeedsSip(index)?formatSip(info):"";const v=formatKvdV(info);if(sip)lines.push(routeLine(name,"SIP",sip));if(v)lines.push(sip?routeBlank("V",v):routeLine(name,"V",v));if(!sip&&!v)lines.push(name)});lines.push(dikader?"ISRA "+dikader:"ISRA");return lines}
+function buildRouteLines(dikader){const lines=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const h=formatH(state.routeInfo.hvd),v=formatV(state.routeInfo.hvd);if(h)lines.push(routeLine(name,"H",h));else lines.push(name);if(v)lines.push(routeBlank("V",v))}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const name="KVD "+clean;const info=state.routeInfo.kvds[index];const sip=kvdNeedsSip(index)?formatSip(info):"";const v=formatKvdV(info);if(sip)lines.push(routeLine(name,"SIP",sip));if(v)lines.push(sip?routeBlank("V",v):routeLine(name,"V",v));if(!sip&&!v)lines.push(name)});lines.push(routeLine("ISRA","",dikader||"-"));return lines}
+function buildCompactRoute(serviceId,dikader){const changes=snapshotRouteChanges(serviceId),items=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const h=formatH(state.routeInfo.hvd),v=formatV(state.routeInfo.hvd);if(h)items.push(h);if(v)items.push(v)}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const routeName="KVD "+clean;const changed=changes.find(change=>change.position===routeName);const value=changed?changed.value:formatKvdV(state.routeInfo.kvds[index]);if(value)items.push(value)});items.push("ISRA "+(dikader||"-"));return items.join(" | ")}
 function buildPositionText(position,direction,dikader){const base=(position||"-")+" richting "+(direction||"-");return dikader?base+" | "+dikader:base}
 function clearNewPosition(){newPositionRijInput.value="";newPositionStijlInput.value="";newPositionStiftInput.value="";newDikaderSelect.value="";refreshNewDikaderOptions();saveState()}
 function getRouteItems(){const items=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd)items.push("HVD "+hvd);state.kvds.map(v=>String(v||"").trim().toUpperCase()).filter(Boolean).forEach(v=>items.push("KVD "+v));items.push("ISRA");return items}
@@ -216,24 +218,57 @@ function validateBeforeScan(){if(!serviceInput.value.trim()){alert("Vul eerst ee
 function startScanner(){scannerTitle.textContent="Scan Argus QR-code";scannerModal.classList.add("open");if(activeScanner)stopScanner();activeScanner=new Html5Qrcode("reader");activeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},text=>{stopScanner();scannerModal.classList.remove("open");handleScannedArgusText(text)}).catch(()=>{scannerModal.classList.remove("open");alert("Camera kon niet worden geopend. Test via HTTPS, localhost of APK en geef cameratoegang.")})}
 function stopScanner(){if(!activeScanner)return;activeScanner.stop().then(()=>activeScanner.clear()).catch(()=>{}).finally(()=>activeScanner=null)}
 function handleScannedArgusText(raw){const id=serviceInput.value.trim();let dikader=state.services[id]||dikaderSelect.value;const isNew=hasNewPositionInput();const positionForMeasurement=isNew?newPositionSelect.value:positionSelect.value;if(isNew&&canChangeDikaderAtNewPosition()&&newDikaderSelect.value){dikader=newDikaderSelect.value;state.services[id]=dikader}else if(!state.services[id])state.services[id]=dikader;if(isNew)updateRouteChanges(id,positionForMeasurement,formatNewPositionValue());const item={id:"m"+Date.now(),type:isNew?"newPosition":"normal",serviceId:id,dikader,position:positionForMeasurement,direction:directionSelect.value,positionText:buildPositionText(positionForMeasurement,directionSelect.value,dikader),newPositionValue:isNew?formatNewPositionValue():"",routeChanges:snapshotRouteChanges(id),parsed:parseArgusText(raw)};state.measurements.push(item);refreshServices();refreshDocument();saveState()}
-function saveLcl(){const value=normalizeLcl(lclInput.value),mid=lclMeasurementSelect.value;if(!lclServiceSelect.value){alert("Kies eerst een Service ID.");return}if(!mid){alert("Kies eerst een positie/meting.");return}if(!value){alert("Vul eerst een LCL waarde in.");return}const m=state.measurements.find(x=>x.id===mid);state.lcls.push({serviceId:lclServiceSelect.value,measurementId:mid,positionText:m?m.positionText:"",value});lclInput.value="";refreshDocument();saveState()}
-function oneLineValues(title,items){return title+" | "+items.join(" | ")}
-function writeRouteChanges(lines,changes){if(!Array.isArray(changes)||!changes.length)return;const width=Math.max(...changes.map(change=>change.position.length));changes.forEach(change=>lines.push("Nieuwe pos "+String(change.position).padEnd(width," ")+" "+change.value))}
-function writeMeasurement(lines,item,label){lines.push("");lines.push(label+" | "+item.positionText);writeRouteChanges(lines,item.routeChanges);lines.push("Lengte "+item.parsed.length+" | ΔC "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");lines.push(oneLineValues("Isolatie",["a-b "+item.parsed.isolation[0],"a-G "+item.parsed.isolation[1],"b-G "+item.parsed.isolation[2]]));lines.push(oneLineValues("Capaciteit",["a-b "+item.parsed.capacity[0],"a-G "+item.parsed.capacity[1],"b-G "+item.parsed.capacity[2]]));lines.push(oneLineValues("DC",["a-b "+item.parsed.dc[0],"a-G "+item.parsed.dc[1],"b-G "+item.parsed.dc[2]]));lines.push(oneLineValues("AC",["a-b "+item.parsed.ac[0],"a-G "+item.parsed.ac[1],"b-G "+item.parsed.ac[2]]))}
-function refreshDocument(){const lines=["KOPERMETINGEN",""];const ids=[...new Set([...state.measurements.map(m=>m.serviceId),...state.lcls.map(l=>l.serviceId)])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));if(!ids.length){lines.push("Nog geen metingen toegevoegd.");documentOutput.value=lines.join("\n");counterInfo.textContent="0 metingen • 0 LCL";return}ids.forEach(id=>{const dikader=state.services[id]||"";const ms=state.measurements.filter(m=>m.serviceId===id);const ls=state.lcls.filter(l=>l.serviceId===id);if(!ms.length&&!ls.length)return;lines.push("------------------------------------------------------------");lines.push("SERVICE ID : "+id);lines.push("");lines.push("ROUTE");lines.push("-----");buildRouteLines(dikader).forEach(line=>lines.push(line));ms.forEach((m,i)=>writeMeasurement(lines,m,"METING "+(i+1)));ls.forEach((l,i)=>{lines.push("");lines.push("LCL "+(i+1)+" | "+l.positionText+" | "+l.value)});lines.push("")});documentOutput.value=lines.join("\n");counterInfo.textContent=state.measurements.length+" metingen • "+state.lcls.length+" LCL"}
+function saveLcl(){const value=normalizeLcl(lclInput.value),mid=lclMeasurementSelect.value;if(!lclServiceSelect.value){alert("Kies eerst een Service ID.");return}if(!mid){alert("Kies eerst een positie/meting.");return}if(!value){alert("Vul eerst een LCL waarde in.");return}const m=state.measurements.find(x=>x.id===mid);const id=lclServiceSelect.value;const dikader=state.services[id]||"";state.lcls.push({serviceId:id,measurementId:mid,routeLine:buildCompactRoute(id,dikader),value});lclInput.value="";refreshDocument();saveState()}
+function saveRouteRestored(){const id=serviceInput.value.trim()||lclServiceSelect.value;if(!id){alert("Kies eerst een Service ID.");return}const dikader=state.services[id]||dikaderSelect.value||"";state.routeRestored[id]=buildCompactRoute(id,dikader);refreshDocument();saveState()}
+function writeRouteChanges(lines,changes){if(!Array.isArray(changes)||!changes.length)return;const width=Math.max(...changes.map(change=>change.position.length));changes.forEach(change=>lines.push("Nieuwe pos : "+String(change.position).padEnd(width," ")+" "+change.value))}
+function writeMeasurement(lines,item,label){lines.push("");lines.push(label+" :");lines.push(item.positionText);writeRouteChanges(lines,item.routeChanges);lines.push("Lengte : "+item.parsed.length+" | ΔC : "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");lines.push("");lines.push("Isolatie :");lines.push("AB "+item.parsed.isolation[0]+" | AG "+item.parsed.isolation[1]+" | BG "+item.parsed.isolation[2]);lines.push("Capaciteit :");lines.push("AB "+item.parsed.capacity[0]+" | AG "+item.parsed.capacity[1]+" | BG "+item.parsed.capacity[2]);lines.push("DC : AB "+item.parsed.dc[0]+" | AG "+item.parsed.dc[1]+" | BG "+item.parsed.dc[2]);lines.push("AC : AB "+item.parsed.ac[0]+" | AG "+item.parsed.ac[1]+" | BG "+item.parsed.ac[2])}
+function refreshDocument(){const lines=["KOPERMETINGEN",""];const ids=[...new Set([...state.measurements.map(m=>m.serviceId),...state.lcls.map(l=>l.serviceId),...Object.keys(state.routeRestored)])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));if(!ids.length){lines.push("Nog geen metingen toegevoegd.");documentOutput.value=lines.join("\n");counterInfo.textContent="0 metingen • 0 LCL";return}ids.forEach(id=>{const dikader=state.services[id]||"";const ms=state.measurements.filter(m=>m.serviceId===id);const ls=state.lcls.filter(l=>l.serviceId===id);if(!ms.length&&!ls.length&&!state.routeRestored[id])return;lines.push("------------------------------------------------------------");lines.push("SERVICE ID : "+id);buildRouteLines(dikader).forEach(line=>lines.push(line));ms.forEach((m,i)=>writeMeasurement(lines,m,"METING "+(i+1)));ls.forEach(l=>{lines.push("");lines.push("LCL :");lines.push("Route : "+(l.routeLine||buildCompactRoute(id,dikader)));lines.push("Waarde : "+l.value)});if(state.routeRestored[id]){lines.push("");lines.push("ROUTE HERSTELD :");lines.push(state.routeRestored[id])}lines.push("")});documentOutput.value=lines.join("\n");counterInfo.textContent=state.measurements.length+" metingen • "+state.lcls.length+" LCL"}
 function copyDocument(){navigator.clipboard.writeText(documentOutput.value).then(()=>alert("Tekst gekopieerd."))}
 function showQrCode(){qrOutput.innerHTML="";QRCode.toCanvas(documentOutput.value,{width:360,margin:2},(e,c)=>{if(e){alert("QR-code maken is mislukt.");return}qrOutput.appendChild(c);qrModal.classList.add("open")})}
 function showConfirm(t,txt,fn){confirmTitle.textContent=t;confirmText.textContent=txt;confirmModal.classList.add("open");acceptConfirmButton.onclick=()=>{fn();confirmModal.classList.remove("open")}}
-function clearDocument(){state.measurements=[];state.lcls=[];state.routeChanges={};refreshServices();refreshDocument();saveState()}
-function clearAll(){state.hvd="";state.kvds=[];state.routeInfoVisible=false;state.routeInfo={hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]};state.services={};state.measurements=[];state.lcls=[];state.routeChanges={};hvdInput.value="";serviceInput.value="";lclInput.value="";clearNewPosition();renderKvds();renderRouteInfo();refreshRouteOptions();refreshServices();refreshDocument();saveState()}
+function clearDocument(){state.measurements=[];state.lcls=[];state.routeChanges={};state.routeRestored={};refreshServices();refreshDocument();saveState()}
+function clearAll(){state.hvd="";state.kvds=[];state.routeInfoVisible=false;state.routeInfo={hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]};state.services={};state.measurements=[];state.lcls=[];state.routeChanges={};state.routeRestored={};hvdInput.value="";serviceInput.value="";lclInput.value="";clearNewPosition();renderKvds();renderRouteInfo();refreshRouteOptions();refreshServices();refreshDocument();saveState()}
 function escapeHtml(v){return String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))}
 document.getElementById("settingsButton").onclick=()=>settingsPanel.classList.toggle("open");
-document.getElementById("helpButton").onclick=()=>alert("Nieuwe positie wordt als meetinformatie bij het Service ID opgeslagen. De vaste route bovenaan blijft ongewijzigd. Latere metingen van hetzelfde Service ID tonen eerdere nieuwe posities mee.");
+document.getElementById("helpButton").onclick=()=>alert(`REGELS KOPERMETING
+
+Capaciteit
+Mag niet meer dan 3% of circa 2 nF afwijken tussen A-G en B-G.
+
+Isolatieweerstand
+A-B, A-G en B-G moeten hoger zijn dan 3 MΩ en stabiel zijn.
+
+Langsweerstand
+Maximaal 5 Ω en maximaal 3% verschil.
+
+Vreemde spanning
+Maximaal 3 V DC of 0,25 V AC.
+
+Symmetrie
+Geldt voor zowel capaciteit als langsweerstand.
+
+Lengte
+Van beide kanten meten. Verschil maximaal 1%.
+
+WERKVOLGORDE
+
+1. HVD invullen indien aanwezig.
+2. KVD toevoegen indien aanwezig.
+3. Route info toevoegen indien nodig.
+4. Service ID kiezen of invoeren.
+5. Dikader kiezen.
+6. Positie en richting kiezen.
+7. Argus QR-code scannen.
+8. Eventueel Nieuwe positie gebruiken bij slechte ader.
+9. Eventueel LCL toevoegen.
+10. Eventueel Route hersteld vastleggen.
+11. Tekstdocument controleren.
+12. Tekst kopiëren of QR-code maken.`);
 document.getElementById("darkModeButton").onclick=()=>setTheme("dark");
 document.getElementById("lightModeButton").onclick=()=>setTheme("light");
 document.getElementById("pageHorizontalButton").onclick=()=>setPageLayout("horizontal");
 document.getElementById("pageVerticalButton").onclick=()=>setPageLayout("vertical");
-document.getElementById("clearDocumentButton").onclick=()=>showConfirm("Document legen","Dit verwijdert metingen, LCL en nieuwe posities. Route en koppelingen blijven staan.",clearDocument);
+document.getElementById("clearDocumentButton").onclick=()=>showConfirm("Document legen","Dit verwijdert metingen, LCL, nieuwe posities en route hersteld. Route en koppelingen blijven staan.",clearDocument);
 document.getElementById("clearAllButton").onclick=()=>showConfirm("Alles legen","Dit verwijdert alles.",clearAll);
 document.getElementById("cancelConfirmButton").onclick=()=>confirmModal.classList.remove("open");
 document.getElementById("scanButton").onclick=()=>{if(validateBeforeScan())startScanner()};
@@ -241,6 +276,7 @@ document.getElementById("cancelScannerButton").onclick=()=>{stopScanner();scanne
 document.getElementById("addKvdButton").onclick=addKvd;
 document.getElementById("toggleRouteInfoButton").onclick=()=>{state.routeInfoVisible=!state.routeInfoVisible;renderRouteInfo();saveState()};
 document.getElementById("saveLclButton").onclick=saveLcl;
+document.getElementById("routeRestoredButton").onclick=saveRouteRestored;
 document.getElementById("newMeasurementButton").onclick=()=>serviceInput.focus();
 document.getElementById("copyButton").onclick=copyDocument;
 document.getElementById("qrButton").onclick=showQrCode;
