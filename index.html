@@ -154,9 +154,9 @@ body.page-layout-vertical .document-card{height:auto}
 <textarea id="documentOutput" class="document" readonly></textarea>
 <div class="actions">
 <button class="success" id="newMeasurementButton">Nieuwe meting</button>
+<button class="primary" id="routeRestoredButton">Route hersteld</button>
 <button class="secondary" id="copyButton">Kopieer tekst</button>
 <button class="blue" id="qrButton">Maak QR-code</button>
-<button class="primary" id="routeRestoredButton">Route hersteld</button>
 </div>
 </div>
 </div>
@@ -211,8 +211,41 @@ function getAvailableDikaders(allowCurrent){const currentService=serviceInput.va
 function refreshDikaderOptions(){const id=serviceInput.value.trim();dikaderSelect.innerHTML="";if(id&&state.services[id]){const o=document.createElement("option");o.value=state.services[id];o.textContent=state.services[id];dikaderSelect.appendChild(o);dikaderSelect.disabled=true;dikaderNote.textContent="Deze Service ID is vast gekoppeld aan "+state.services[id]+".";refreshNewDikaderOptions();return}getAvailableDikaders(false).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;dikaderSelect.appendChild(o)});dikaderSelect.disabled=false;dikaderNote.textContent="Na de eerste scan wordt deze dikader vast gekoppeld aan deze Service ID.";refreshNewDikaderOptions()}
 function refreshNewDikaderOptions(){if(!canChangeDikaderAtNewPosition()){newDikaderBlock.classList.add("hidden");newDikaderSelect.value="";newDikaderNote.textContent="";return}newDikaderBlock.classList.remove("hidden");const old=newDikaderSelect.value;newDikaderSelect.innerHTML="";const e=document.createElement("option");e.value="";e.textContent="Geen nieuwe dikader";newDikaderSelect.appendChild(e);getAvailableDikaders(true).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;newDikaderSelect.appendChild(o)});if([...newDikaderSelect.options].some(o=>o.value===old))newDikaderSelect.value=old;newDikaderNote.textContent="Nieuwe dikader is toegestaan op deze laatste positie vóór ISRA."}
 function refreshLclMeasurementOptions(){const id=lclServiceSelect.value,old=lclMeasurementSelect.value;lclMeasurementSelect.innerHTML="";state.measurements.filter(m=>m.serviceId===id).forEach(m=>{const o=document.createElement("option");o.value=m.id;o.textContent=m.positionText;lclMeasurementSelect.appendChild(o)});if([...lclMeasurementSelect.options].some(o=>o.value===old))lclMeasurementSelect.value=old}
-function parseArgusText(raw){const r={length:"-",deltaAbs:"-",deltaRel:"-",isolation:["-","-","-"],capacity:["-","-","-"],dc:["-","-","-"],ac:["-","-","-"],raw};String(raw||"").replace(/\r/g,"\n").replace(/,/g,".").split(/\n+/).map(l=>l.trim()).filter(Boolean).forEach(line=>{const p=line.split(";").map(x=>x.trim()),k=(p[0]||"").toLowerCase();if(k==="dc"&&p.length>=4)r.dc=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];if(k==="ac"&&p.length>=4)r.ac=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];if((k==="riso"||k==="iso")&&p.length>=4)r.isolation=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];if((k==="l"||k==="length")&&p.length>=2)r.length=cleanValue(p[1]);if((k==="cab"||k==="cm(ab)"||k==="ca-b"||k==="c(a-b)")&&p.length>=2)r.capacity[0]=cleanValue(p[1]);if((k==="cag"||k==="ca-g"||k==="c(a-g)")&&p.length>=2)r.capacity[1]=cleanValue(p[1]);if((k==="cbg"||k==="cb-g"||k==="c(b-g)")&&p.length>=2)r.capacity[2]=cleanValue(p[1]);if((k==="deltac"||k==="deltacab(abs)")&&p.length>=2)r.deltaAbs=cleanValue(p[1]);if((k==="deltac%"||k==="deltacab(rel)")&&p.length>=2)r.deltaRel=cleanValue(p[1])});return r}
-function cleanValue(v){return String(v||"-").replace(/MOhm/gi,"MΩ").replace(/mOhm/gi,"mΩ").replace(/pct/gi,"%").trim()}
+function normalizeKey(v){return String(v||"").trim().toLowerCase().replace(/\s+/g,"").replace(/_/g,"-").replace(/ω/g,"ohm")}
+function cleanValue(v){return String(v||"-").replace(/- -/g,"-").replace(/MOhm/gi,"MΩ").replace(/mOhm/gi,"mΩ").replace(/Ohm/gi,"Ω").replace(/pct/gi,"%").trim()}
+function numberFromValue(v){const m=String(v||"").replace(",",".").match(/-?\d+(\.\d+)?/);return m?Number(m[0]):null}
+function parseArgusText(raw){
+const r={length:"-",deltaAbs:"-",deltaRel:"-",isolation:["-","-","-"],capacity:["-","-","-"],dc:["-","-","-"],ac:["-","-","-"],raw};
+String(raw||"").replace(/\r/g,"\n").replace(/,/g,".").split(/\n+/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+const p=line.split(";").map(x=>x.trim()).filter(x=>x!=="");
+const k=normalizeKey(p[0]||"");
+if(k==="dc"&&p.length>=4)r.dc=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if(k==="ac"&&p.length>=4)r.ac=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if((k==="iso"||k==="riso"||k==="isolatie")&&p.length>=4)r.isolation=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if(k==="cap"&&p.length>=4)r.capacity=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if((k==="l"||k==="length"||k==="lengte")&&p.length>=2)r.length=cleanValue(p[1]);
+for(let i=0;i<p.length-1;i+=2){
+const key=normalizeKey(p[i]);
+const value=cleanValue(p[i+1]);
+if(["cmab","cm(a-b)","cab","ca-b","c(a-b)"].includes(key))r.capacity[0]=value;
+if(["cag","ca-g","cmag","cm(a-g)"].includes(key))r.capacity[1]=value;
+if(["cbg","cb-g","cmbg","cm(b-g)"].includes(key))r.capacity[2]=value;
+if(["deltacababs","deltacab(abs)","deltacabs","delta-cabs"].includes(key))r.deltaAbs=value;
+if(["deltacabrel","deltacab(rel)","deltacrel","delta-crel"].includes(key))r.deltaRel=value;
+}
+});
+if((r.deltaAbs==="-"||r.deltaRel==="-")&&r.capacity[1]!=="-"&&r.capacity[2]!=="-"){
+const ag=numberFromValue(r.capacity[1]);
+const bg=numberFromValue(r.capacity[2]);
+if(ag!==null&&bg!==null){
+const abs=Math.abs(ag-bg);
+const avg=(Math.abs(ag)+Math.abs(bg))/2;
+r.deltaAbs=abs.toFixed(2)+" nF";
+r.deltaRel=avg>0?(abs/avg*100).toFixed(1)+"%":"-";
+}
+}
+return r;
+}
 function normalizeLcl(v){const c=String(v||"").replace(",",".").replace("dBm","").trim();if(!c)return"";const n=Number(c);if(Number.isNaN(n))return"";return"-"+Math.abs(n).toFixed(1)+" dBm"}
 function validateBeforeScan(){if(!serviceInput.value.trim()){alert("Vul eerst een Service ID in.");return false}if(!dikaderSelect.value){alert("Kies eerst een vrije dikader.");return false}if(!positionSelect.value||!directionSelect.value){alert("Kies eerst positie en richting.");return false}return true}
 function startScanner(){scannerTitle.textContent="Scan Argus QR-code";scannerModal.classList.add("open");if(activeScanner)stopScanner();activeScanner=new Html5Qrcode("reader");activeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},text=>{stopScanner();scannerModal.classList.remove("open");handleScannedArgusText(text)}).catch(()=>{scannerModal.classList.remove("open");alert("Camera kon niet worden geopend. Test via HTTPS, localhost of APK en geef cameratoegang.")})}
