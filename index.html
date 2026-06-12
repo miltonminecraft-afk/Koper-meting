@@ -4,83 +4,104 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kopermetingen</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <style>
-:root{--bg:#f4f6fa;--panel:#ffffff;--panel2:#eef1f7;--text:#10141d;--muted:#667085;--border:#d6dbe6;--accent:#0b66d8;--danger:#c91d1d;--success:#148a42;--input:#ffffff;--focus:#f2b632;--shadow:0 18px 40px rgba(0,0,0,.18)}
-body.dark{--bg:#07090d;--panel:#11151d;--panel2:#0c0f15;--text:#f4f6fb;--muted:#a8afbd;--border:#2a303c;--accent:#e02020;--danger:#e02020;--success:#159947;--input:#090c12;--focus:#f2b632;--shadow:0 18px 40px rgba(0,0,0,.35)}
+:root{--bg:#f4f6fa;--panel:#fff;--panel2:#eef1f7;--text:#10141d;--muted:#667085;--border:#d6dbe6;--accent:#0b66d8;--danger:#c91d1d;--success:#148a42;--input:#fff}
+body.dark{--bg:#07090d;--panel:#11151d;--panel2:#0c0f15;--text:#f4f6fb;--muted:#a8afbd;--border:#2a303c;--accent:#e02020;--danger:#e02020;--success:#159947;--input:#090c12}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-.app{min-height:100vh;padding:18px}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
-h1{margin:0;font-size:30px;letter-spacing:.5px;line-height:1.1}
-.icon-bar{display:flex;gap:10px;position:relative;flex-shrink:0}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}
+.app{min-height:100vh;padding:18px;max-width:100%;overflow-x:hidden}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+h1{margin:0;font-size:30px}
+.icon-bar{display:flex;gap:10px;position:relative}
 .icon-button{width:46px;height:46px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;font-size:22px;cursor:pointer}
-.settings{display:none;position:absolute;right:0;top:54px;width:310px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;z-index:30;box-shadow:var(--shadow)}
+.settings{display:none;position:absolute;right:0;top:54px;width:310px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;z-index:80;box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .settings.open{display:block}
 .settings h3{margin:0 0 10px 0}
 .settings-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);color:var(--accent);font-weight:bold}
 .setting-row{display:flex;justify-content:space-between;padding:10px;border-radius:8px;cursor:pointer}
 .setting-row:hover{background:var(--panel2)}
-.setting-row span:last-child{color:var(--accent)}
-.layout{display:grid;gap:14px}
-body.page-layout-horizontal .layout{grid-template-columns:1fr}
-body.page-layout-vertical .layout{grid-template-columns:430px 1fr}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.layout{display:grid;gap:14px;min-width:0;max-width:100%}
+.layout>div,.card{min-width:0;max-width:100%}
+body.page-layout-horizontal .layout{grid-template-columns:420px 1fr}
+body.page-layout-vertical .layout{grid-template-columns:1fr}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;min-width:0;max-width:100%}
 h2{margin:0 0 14px 0;color:var(--accent);font-size:20px}
-h3{margin:18px 0 8px 0;color:var(--accent);font-size:18px}
 label{display:block;margin:12px 0 6px 0;font-weight:bold}
 input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:16px}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:1px}
 input:disabled,select:disabled{opacity:.75}
 textarea{resize:vertical;font-family:"Courier New",monospace}
+.service-combo{position:relative;z-index:60}
+.service-input-wrap{position:relative}
+.service-input-wrap input{padding-right:48px}
+.service-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);border-radius:50%;font-size:18px;font-weight:bold;padding:0;line-height:1;display:none;align-items:center;justify-content:center}
+.service-clear.visible{display:flex}
+.service-dropdown{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--border);border-radius:10px;max-height:220px;overflow:auto;box-shadow:0 18px 36px rgba(0,0,0,.35);z-index:90}
+.service-dropdown.open{display:block}
+.service-option{padding:12px;border-bottom:1px solid var(--border);cursor:pointer}
+.service-option:last-child{border-bottom:0}
+.service-option:hover{background:var(--panel2)}
+
+.service-id-entry{display:grid;grid-template-columns:1fr 46px;gap:8px;align-items:center}
+.service-id-entry button{width:46px;height:48px;padding:0;font-size:28px;line-height:1}
+.service-id-list{margin-top:0}
+.service-id-item{display:grid;grid-template-columns:1fr 30px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-weight:bold}
+.service-id-item:last-child{border-bottom:0}
+.service-id-remove{width:30px;height:30px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:8px;font-size:18px;font-weight:bold;padding:0;line-height:1}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.kvd-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
-.kvd-chip{display:grid;grid-template-columns:auto 44px 36px;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:7px}
-.kvd-label{font-weight:bold;color:var(--text);white-space:nowrap}
-.kvd-input{width:44px;min-width:44px;text-align:center;text-transform:uppercase;padding:8px}
-.kvd-small-button{width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0;font-size:20px}
-.kvd-add-inline{width:100%;height:52px;padding:0;font-size:22px}
-.service-wrapper{position:relative}
-.service-suggestions{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:20;box-shadow:var(--shadow)}
-.service-suggestions.open{display:block}
-.service-suggestion{padding:12px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--panel)}
-.service-suggestion:last-child{border-bottom:0}
-.service-suggestion:hover{background:var(--panel2)}
+.route-compact-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.route-compact-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.route-compact-three label,.route-compact-two label{margin-top:8px}
+.route-info-line-three{display:grid;grid-template-columns:46px auto minmax(52px,1fr) auto minmax(52px,1fr) auto minmax(52px,1fr);gap:8px;align-items:center;margin-top:12px}
+.route-info-line-two{display:grid;grid-template-columns:46px auto minmax(70px,1fr) auto minmax(70px,1fr);gap:8px;align-items:center;margin-top:12px}
+.route-info-line-three>*,.route-info-line-two>*{min-width:0}
+.route-info-line-three input,.route-info-line-two input,.new-position-grid input{height:48px;padding:10px 8px;text-align:center}
+.route-info-axis{color:var(--accent);font-size:20px;font-weight:bold;white-space:nowrap}
+.route-info-column{font-weight:bold;color:var(--text);white-space:nowrap}
+.new-position-rows{display:grid;gap:6px}.new-position-grid{display:grid;grid-template-columns:46px auto minmax(52px,1fr) auto minmax(52px,1fr) auto minmax(52px,1fr);gap:8px;align-items:center}
+.new-position-grid.kvd-mode{grid-template-columns:46px auto minmax(70px,1fr) auto minmax(70px,1fr)}
+.new-position-grid>*{min-width:0}
+.route-entry{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:center;margin-top:12px}
+.route-entry label{margin:0}
+.kvd-row{display:grid;grid-template-columns:52px 1fr 54px;gap:8px;align-items:center;margin-top:12px}
+.kvd-row label{margin:0}
+.route-info-block{border-top:1px solid var(--border);padding-top:12px;margin-top:12px}
+.route-info-title{color:var(--accent);font-weight:bold;margin-top:10px}
+.card-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.card-title-row h2{margin:0}
+.card-title-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.route-info-service-select{width:auto;min-width:112px;max-width:170px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 28px 7px 8px;font-size:14px;font-weight:bold}
+.current-route-wrap{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding-bottom:4px;width:100%;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.current-route-card{flex:0 0 260px;min-width:260px;max-width:260px;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px}
+.current-route-title{color:var(--accent);font-weight:bold;margin-bottom:8px;white-space:nowrap}
+.current-route-lines{font-family:"Courier New",monospace;font-size:14px;line-height:1.55;white-space:pre;color:var(--text);overflow:hidden}
+.current-route-empty{color:var(--muted);font-size:14px;line-height:1.4}
+#currentRoutePanel{min-width:0;max-width:100%;overflow:hidden}
+.collapse-toggle{width:44px;height:44px;min-width:44px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:8px;font-size:24px;font-weight:bold;padding:0;line-height:1}
+.card.collapsed-card{padding:10px 16px;margin-bottom:10px}
+.card.collapsed-card .card-title-row{margin-bottom:0}
+.card.collapsed-card .collapse-toggle{width:40px;height:40px;min-width:40px}
 button{border:0;border-radius:8px;padding:13px 14px;font-size:16px;font-weight:bold;cursor:pointer}
-.primary{background:var(--danger);color:#fff}
-.success{background:var(--success);color:#fff}
+.collapse-toggle{padding:0}
+.primary{background:var(--danger);color:white}
+.success{background:var(--success);color:white}
 .secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
-.blue{background:#0b66d8;color:#fff}
+.blue{background:#0b66d8;color:white}
 .full{width:100%;margin-top:14px}
 .note{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.4}
-.hidden-note{display:none}
-.divider{height:1px;background:var(--border);margin:18px 0}
 .document-card{height:calc(100vh - 110px);display:flex;flex-direction:column}
-body.page-layout-horizontal .document-card{height:auto}
-.document-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
+body.page-layout-vertical .document-card{height:auto}
+.document-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .document-header h2{margin:0}
 .document{flex:1;min-height:520px;white-space:pre;overflow:auto;resize:none;font-size:15px;line-height:1.45}
-.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
-.modal{position:fixed;inset:0;display:none;background:rgba(0,0,0,.72);align-items:center;justify-content:center;z-index:50;padding:16px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:12px}
+.modal{position:fixed;inset:0;display:none;background:rgba(0,0,0,.72);align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal.open{display:flex}
-.modal-box{width:min(620px,100%);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
-.modal-box h2{margin-top:0}
+.modal-box{width:min(640px,100%);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-.qr-box{background:#fff;color:#000;border-radius:10px;padding:20px;text-align:center;overflow-wrap:anywhere}
-#reader{width:100%}
-@media(max-width:900px){
-body.page-layout-vertical .layout{grid-template-columns:1fr}
-.document-card{height:auto}
-.document{min-height:520px}
-.actions{grid-template-columns:1fr}
-.grid{grid-template-columns:1fr}
-.kvd-list{grid-template-columns:repeat(2,minmax(0,1fr))}
-.settings{width:300px}
-h1{font-size:26px}
-}
+#reader{width:100%;min-height:280px;overflow:hidden;border-radius:10px;background:#000}
+.hidden{display:none}
+@media(max-width:900px){body.page-layout-horizontal .layout{grid-template-columns:1fr}.document-card{height:auto}.document{min-height:520px}.actions,.grid{grid-template-columns:1fr}.route-compact-three{grid-template-columns:1fr 1fr 1fr}.route-compact-two{grid-template-columns:1fr 1fr}.route-info-service-select{min-width:92px;max-width:140px;font-size:12px}.current-route-card{flex-basis:250px;min-width:250px;max-width:250px}.route-info-line-three,.new-position-grid{grid-template-columns:42px auto minmax(46px,1fr) auto minmax(46px,1fr) auto minmax(46px,1fr);gap:6px}.route-info-line-two,.new-position-grid.kvd-mode{grid-template-columns:42px auto minmax(56px,1fr) auto minmax(56px,1fr);gap:6px}.route-entry{grid-template-columns:52px 1fr}.kvd-row{grid-template-columns:52px 1fr 54px}}
 </style>
 </head>
 <body class="dark page-layout-horizontal">
@@ -107,85 +128,121 @@ h1{font-size:26px}
 <div class="layout">
 <div>
 <div class="card">
-<h2>ROUTE</h2>
-<label>HVD</label>
-<input id="hvdInput" type="text">
-<div id="kvdContainer" class="kvd-list"></div>
-<div id="addFirstKvdBox">
-<button class="secondary full" id="addFirstKvdButton" type="button">+ KVD toevoegen</button>
+<div class="card-title-row"><h2>ROUTE</h2><button class="collapse-toggle" id="toggleRouteButton" type="button">−</button></div>
+<div id="routePanel">
+<div class="route-entry"><label>HVD</label><input id="hvdInput" placeholder="Hoofdverdeler"></div>
+<div id="kvdContainer"></div>
+<button class="secondary full" id="addKvdButton" type="button">+ KVD toevoegen</button>
+<div class="note">HVD mag leeg blijven. KVD is optioneel. ISRA wordt automatisch toegevoegd.</div>
+</div>
+</div>
+
+
+<div class="card">
+<div class="card-title-row"><h2>SERVICE ID'S</h2><button class="collapse-toggle" id="toggleServiceIdsButton" type="button">−</button></div>
+<div id="serviceIdsPanel">
+<div class="service-id-entry"><input id="newServiceIdInput" placeholder="Service ID" autocomplete="off"><button class="success" id="addServiceIdButton" type="button">+</button></div>
+<div id="serviceIdsList" class="service-id-list"></div>
 </div>
 </div>
 
 <div class="card">
-<h2>ROUTE INFO</h2>
-<div id="activeServiceRouteInfo" class="note hidden-note"></div>
-<button class="secondary full" id="toggleRouteInfoButton">- Route info verbergen</button>
-<div id="routeInfoContent">
-<div class="divider"></div>
-<div id="routeInfoContainer"></div>
-</div>
+<div class="card-title-row"><div class="card-title-main"><h2>POSITIES</h2><select id="routeInfoServiceSelect" class="route-info-service-select hidden"></select></div><button class="collapse-toggle" id="toggleRouteInfoButton" type="button">+</button></div>
+<div id="routeInfoPanel" style="display:none;"></div>
 </div>
 
 <div class="card">
-<h2>METING</h2>
+<div class="card-title-row"><h2>ACTUELE ROUTE</h2><button class="collapse-toggle" id="toggleCurrentRouteButton" type="button">−</button></div>
+<div id="currentRoutePanel"><div id="currentRouteOutput" class="current-route-wrap"></div></div>
+</div>
+
+<div class="card">
+<div class="card-title-row"><h2>METING</h2><button class="collapse-toggle" id="toggleMeasurementButton" type="button">−</button></div>
+<div id="measurementPanel">
 <label>Service ID</label>
-<div class="service-wrapper">
-<input id="serviceInput" type="text" placeholder="Kies of voer Service ID in" autocomplete="off">
-<div id="serviceSuggestions" class="service-suggestions"></div>
+<div class="service-combo">
+<div class="service-input-wrap">
+<input id="serviceInput" placeholder="Kies of voer Service ID in" autocomplete="off">
+<button class="service-clear" id="serviceClearButton" type="button">×</button>
 </div>
-
+<div id="serviceDropdown" class="service-dropdown"></div>
+</div>
 <label>Dikader</label>
 <select id="dikaderSelect"></select>
-<div id="dikaderNote" class="note hidden-note"></div>
-
+<div id="dikaderNote" class="note"></div>
 <div class="grid">
-<div>
-<label>Positie</label>
-<select id="positionSelect"></select>
-</div>
-<div>
-<label>Richting</label>
-<select id="directionSelect"></select>
+<div><label>Locatie</label><select id="positionSelect"></select></div>
+<div><label>Richting</label><select id="directionSelect"></select></div>
 </div>
 </div>
-
 <button class="primary full" id="scanButton">Scan Argus QR-code</button>
 </div>
 
 <div class="card">
-<h2>NIEUWE POSITIE</h2>
+<div class="card-title-row"><h2>NIEUWE POSITIE</h2><button class="collapse-toggle" id="toggleNewPositionButton" type="button">−</button></div>
+<div id="newPositionPanel">
 <label>Nieuwe positie</label>
 <select id="newPositionSelect"></select>
-<div class="grid-three">
-<div>
-<label>Rij</label>
-<input id="newRowInput" class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000">
+<div id="newPositionRows" class="new-position-rows">
+<div id="newPositionHRow" class="new-position-grid">
+<div class="route-info-axis">H</div>
+<div class="route-info-column">Rij</div>
+<input id="newPositionHRijInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stijl</div>
+<input id="newPositionHStijlInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stift</div>
+<input id="newPositionHStiftInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="000">
 </div>
-<div>
-<label>Stijl</label>
-<input id="newStyleInput" class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000">
+<div id="newPositionSipRow" class="new-position-grid kvd-mode hidden">
+<div class="route-info-axis">SIP</div>
+<div class="route-info-column">Stijl</div>
+<input id="newPositionSipStijlInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stift</div>
+<input id="newPositionSipStiftInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="000">
 </div>
-<div>
-<label>Stift</label>
-<input id="newPinInput" class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000">
+<div id="newPositionKvdHRow" class="new-position-grid kvd-mode hidden">
+<div class="route-info-axis">H</div>
+<div id="newPositionKvdHRijBlock" class="route-info-column hidden">Rij</div>
+<input id="newPositionKvdHRijInput" class="hidden" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stijl</div>
+<input id="newPositionKvdHStijlInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stift</div>
+<input id="newPositionKvdHStiftInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="000">
+</div>
+<div id="newPositionVRow" class="new-position-grid">
+<div class="route-info-axis">V</div>
+<div id="newPositionVRijBlock" class="route-info-column">Rij</div>
+<input id="newPositionVRijInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stijl</div>
+<input id="newPositionVStijlInput" maxlength="3" autocomplete="off" placeholder="000">
+<div class="route-info-column">Stift</div>
+<input id="newPositionVStiftInput" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="000">
 </div>
 </div>
+<div id="newDikaderBlock" class="hidden">
+<label>Nieuwe dikader</label>
+<select id="newDikaderSelect"></select>
+<div id="newDikaderNote" class="note hidden"></div>
+</div>
+<button class="success full" id="saveNewPositionButton">Opslaan zonder scan</button>
 <button class="secondary full" id="clearNewPositionButton">Nieuwe positie leegmaken</button>
+</div>
 </div>
 
 <div class="card">
-<h2>LCL-METING</h2>
+<div class="card-title-row"><h2>LCL-METING</h2><button class="collapse-toggle" id="toggleLclButton" type="button">−</button></div>
+<div id="lclPanel">
 <label>Service ID</label>
 <select id="lclServiceSelect"></select>
-<div id="lclInfo" class="note hidden-note"></div>
 <label>Positie</label>
-<select id="lclPositionSelect"></select>
+<select id="lclMeasurementSelect"></select>
 <label>LCL</label>
 <div class="grid">
-<input id="lclInput" type="number" step="0.1" placeholder="-82.4">
+<input id="lclInput" type="number" step="0.1" placeholder="-">
 <input value="dBm" disabled>
 </div>
 <button class="success full" id="saveLclButton">Opslaan LCL</button>
+</div>
 </div>
 </div>
 
@@ -197,950 +254,310 @@ h1{font-size:26px}
 <textarea id="documentOutput" class="document" readonly></textarea>
 <div class="actions">
 <button class="success" id="newMeasurementButton">Nieuwe meting</button>
+<button class="primary" id="routeRestoredButton">Route hersteld</button>
 <button class="secondary" id="copyButton">Kopieer tekst</button>
-<button class="blue" id="qrButton">Maak QR-code</button>
+<button class="blue" id="bluetoothButton">Verstuur via Bluetooth</button>
 </div>
 </div>
 </div>
 </div>
 
-<div class="modal" id="scannerModal">
-<div class="modal-box">
-<h2>Scan Argus QR-code</h2>
-<div id="reader"></div>
-<div class="modal-actions"><button class="secondary" id="closeScannerButton">Annuleren</button></div>
-</div>
-</div>
-
-<div class="modal" id="confirmModal">
-<div class="modal-box">
-<h2 id="confirmTitle"></h2>
-<div id="confirmText"></div>
-<div class="modal-actions">
-<button class="secondary" id="cancelConfirmButton">Annuleren</button>
-<button class="primary" id="acceptConfirmButton">Bevestigen</button>
-</div>
-</div>
-</div>
-
-<div class="modal" id="qrModal">
-<div class="modal-box">
-<h2>QR-code van tekstdocument</h2>
-<div class="qr-box" id="qrOutput"></div>
-<div class="modal-actions"><button class="secondary" id="closeQrButton">Sluiten</button></div>
-</div>
-</div>
+<div class="modal" id="scannerModal"><div class="modal-box"><h2 id="scannerTitle">Scan Argus QR-code</h2><div id="reader"></div><div class="modal-actions"><button class="secondary" id="cancelScannerButton">Annuleren</button></div></div></div>
+<div class="modal" id="confirmModal"><div class="modal-box"><h2 id="confirmTitle"></h2><div id="confirmText"></div><div class="modal-actions"><button class="secondary" id="cancelConfirmButton">Annuleren</button><button class="primary" id="acceptConfirmButton">Bevestigen</button></div></div></div>
 
 <script>
-const state={
-theme:"dark",
-pageLayout:"horizontal",
-routeInfoVisible:true,
-hvd:"",
-kvds:[],
-routeInfo:{hvd:{h:{row:"",style:"",pin:""},v:{row:"",style:"",pin:""}},kvds:[]},
-activeServiceId:"",
-services:{},
-measurements:[],
-lcls:{},
-newPositions:{}
-};
-
-const hvdInput=document.getElementById("hvdInput");
-const kvdContainer=document.getElementById("kvdContainer");
-const addFirstKvdBox=document.getElementById("addFirstKvdBox");
-const addFirstKvdButton=document.getElementById("addFirstKvdButton");
-const routeInfoContainer=document.getElementById("routeInfoContainer");
-const routeInfoContent=document.getElementById("routeInfoContent");
-const toggleRouteInfoButton=document.getElementById("toggleRouteInfoButton");
-const activeServiceRouteInfo=document.getElementById("activeServiceRouteInfo");
-const serviceInput=document.getElementById("serviceInput");
-const serviceSuggestions=document.getElementById("serviceSuggestions");
-const dikaderSelect=document.getElementById("dikaderSelect");
-const dikaderNote=document.getElementById("dikaderNote");
-const positionSelect=document.getElementById("positionSelect");
-const directionSelect=document.getElementById("directionSelect");
-const newPositionSelect=document.getElementById("newPositionSelect");
-const newRowInput=document.getElementById("newRowInput");
-const newStyleInput=document.getElementById("newStyleInput");
-const newPinInput=document.getElementById("newPinInput");
-const lclServiceSelect=document.getElementById("lclServiceSelect");
-const lclPositionSelect=document.getElementById("lclPositionSelect");
-const lclInfo=document.getElementById("lclInfo");
-const lclInput=document.getElementById("lclInput");
-const documentOutput=document.getElementById("documentOutput");
-const counterInfo=document.getElementById("counterInfo");
-const settingsPanel=document.getElementById("settingsPanel");
-const scannerModal=document.getElementById("scannerModal");
-const confirmModal=document.getElementById("confirmModal");
-const confirmTitle=document.getElementById("confirmTitle");
-const confirmText=document.getElementById("confirmText");
-const acceptConfirmButton=document.getElementById("acceptConfirmButton");
-const qrModal=document.getElementById("qrModal");
-const qrOutput=document.getElementById("qrOutput");
-
+const state={theme:"dark",pageLayout:"horizontal",hvd:"",kvds:[],routeVisible:true,serviceIdsVisible:true,routeInfoVisible:false,routeInfoSelectedServiceId:"",currentRouteVisible:true,measurementVisible:true,newPositionVisible:true,lclVisible:true,routeInfo:{hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]},serviceRouteInfo:{},lastRouteInfoTemplate:null,services:{},measurements:[],lcls:[],routeChanges:{},routeRestored:{},serviceDrafts:[]};
 let activeScanner=null;
-let scannerBusy=false;
+let autoServiceDraftId="";
+let newPositionDirty=false,newPositionPrefillKey="";
+const hvdInput=document.getElementById("hvdInput"),kvdContainer=document.getElementById("kvdContainer"),routePanel=document.getElementById("routePanel"),toggleRouteButton=document.getElementById("toggleRouteButton"),routeInfoPanel=document.getElementById("routeInfoPanel"),toggleRouteInfoButton=document.getElementById("toggleRouteInfoButton"),routeInfoServiceSelect=document.getElementById("routeInfoServiceSelect"),currentRoutePanel=document.getElementById("currentRoutePanel"),toggleCurrentRouteButton=document.getElementById("toggleCurrentRouteButton"),currentRouteOutput=document.getElementById("currentRouteOutput"),measurementPanel=document.getElementById("measurementPanel"),toggleMeasurementButton=document.getElementById("toggleMeasurementButton"),serviceInput=document.getElementById("serviceInput"),serviceClearButton=document.getElementById("serviceClearButton"),serviceDropdown=document.getElementById("serviceDropdown"),dikaderSelect=document.getElementById("dikaderSelect"),dikaderNote=document.getElementById("dikaderNote"),positionSelect=document.getElementById("positionSelect"),directionSelect=document.getElementById("directionSelect"),newPositionPanel=document.getElementById("newPositionPanel"),toggleNewPositionButton=document.getElementById("toggleNewPositionButton"),newPositionSelect=document.getElementById("newPositionSelect"),newPositionRows=document.getElementById("newPositionRows"),newPositionHRow=document.getElementById("newPositionHRow"),newPositionHRijInput=document.getElementById("newPositionHRijInput"),newPositionHStijlInput=document.getElementById("newPositionHStijlInput"),newPositionHStiftInput=document.getElementById("newPositionHStiftInput"),newPositionSipRow=document.getElementById("newPositionSipRow"),newPositionSipStijlInput=document.getElementById("newPositionSipStijlInput"),newPositionSipStiftInput=document.getElementById("newPositionSipStiftInput"),newPositionKvdHRow=document.getElementById("newPositionKvdHRow"),newPositionKvdHRijBlock=document.getElementById("newPositionKvdHRijBlock"),newPositionKvdHRijInput=document.getElementById("newPositionKvdHRijInput"),newPositionKvdHStijlInput=document.getElementById("newPositionKvdHStijlInput"),newPositionKvdHStiftInput=document.getElementById("newPositionKvdHStiftInput"),newPositionVRow=document.getElementById("newPositionVRow"),newPositionVRijBlock=document.getElementById("newPositionVRijBlock"),newPositionVRijInput=document.getElementById("newPositionVRijInput"),newPositionVStijlInput=document.getElementById("newPositionVStijlInput"),newPositionVStiftInput=document.getElementById("newPositionVStiftInput"),newDikaderBlock=document.getElementById("newDikaderBlock"),newDikaderSelect=document.getElementById("newDikaderSelect"),newDikaderNote=document.getElementById("newDikaderNote"),documentOutput=document.getElementById("documentOutput"),counterInfo=document.getElementById("counterInfo"),lclPanel=document.getElementById("lclPanel"),toggleLclButton=document.getElementById("toggleLclButton"),lclServiceSelect=document.getElementById("lclServiceSelect"),lclMeasurementSelect=document.getElementById("lclMeasurementSelect"),lclInput=document.getElementById("lclInput"),settingsPanel=document.getElementById("settingsPanel"),confirmModal=document.getElementById("confirmModal"),confirmTitle=document.getElementById("confirmTitle"),confirmText=document.getElementById("confirmText"),acceptConfirmButton=document.getElementById("acceptConfirmButton"),scannerModal=document.getElementById("scannerModal"),scannerTitle=document.getElementById("scannerTitle");
+const serviceIdsPanel=document.getElementById("serviceIdsPanel"),toggleServiceIdsButton=document.getElementById("toggleServiceIdsButton"),newServiceIdInput=document.getElementById("newServiceIdInput"),addServiceIdButton=document.getElementById("addServiceIdButton"),serviceIdsList=document.getElementById("serviceIdsList");
 
-function defaultRouteInfo(){
-return {hvd:{h:{row:"",style:"",pin:""},v:{row:"",style:"",pin:""}},kvds:[]};
-}
-
-function normalizeState(){
-if(!Array.isArray(state.kvds)) state.kvds=[];
-state.kvds=state.kvds.map(v=>typeof v==="string"?v.trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,2):"");
-if(!state.routeInfo || typeof state.routeInfo!=="object") state.routeInfo=defaultRouteInfo();
-if(!state.routeInfo.hvd) state.routeInfo.hvd=defaultRouteInfo().hvd;
-if(!state.routeInfo.hvd.h) state.routeInfo.hvd.h={row:"",style:"",pin:""};
-if(!state.routeInfo.hvd.v) state.routeInfo.hvd.v={row:"",style:"",pin:""};
-["row","style","pin"].forEach(k=>{
-if(typeof state.routeInfo.hvd.h[k]!=="string") state.routeInfo.hvd.h[k]="";
-if(typeof state.routeInfo.hvd.v[k]!=="string") state.routeInfo.hvd.v[k]="";
-});
-if(!Array.isArray(state.routeInfo.kvds)) state.routeInfo.kvds=[];
-if(!state.services || typeof state.services!=="object") state.services={};
-Object.keys(state.services).forEach(id=>{
-const value=state.services[id];
-if(typeof value==="string") state.services[id]={dikader:value};
-if(!state.services[id] || typeof state.services[id]!=="object") state.services[id]={dikader:""};
-if(typeof state.services[id].dikader!=="string") state.services[id].dikader="";
-});
-if(!Array.isArray(state.measurements)) state.measurements=[];
-if(!state.lcls || typeof state.lcls!=="object") state.lcls={};
-if(!state.newPositions || typeof state.newPositions!=="object") state.newPositions={};
-if(!state.theme) state.theme="dark";
-if(!state.pageLayout) state.pageLayout="horizontal";
-if(typeof state.routeInfoVisible!=="boolean") state.routeInfoVisible=true;
-if(typeof state.activeServiceId!=="string") state.activeServiceId="";
-syncRouteInfoLength();
-}
-
-function syncRouteInfoLength(){
-while(state.routeInfo.kvds.length<state.kvds.length) state.routeInfo.kvds.push({v:{style:"",pin:""}});
-if(state.routeInfo.kvds.length>state.kvds.length) state.routeInfo.kvds=state.routeInfo.kvds.slice(0,state.kvds.length);
-state.routeInfo.kvds.forEach(item=>{
-if(!item.v) item.v={style:"",pin:""};
-if(typeof item.v.style!=="string") item.v.style="";
-if(typeof item.v.pin!=="string") item.v.pin="";
-});
-}
-
-function saveState(){
-state.hvd=hvdInput.value.trim().toUpperCase();
-normalizeState();
-localStorage.setItem("kopermetingen",JSON.stringify(state));
-}
-
-function loadState(){
-const stored=localStorage.getItem("kopermetingen");
-if(stored){
-try{
-const parsed=JSON.parse(stored);
-if(parsed && typeof parsed==="object") Object.assign(state,parsed);
-}catch(error){}
-}
-normalizeState();
-}
-
-function addKvd(){
-state.kvds.push("");
-syncRouteInfoLength();
-renderKvds();
-renderRouteInfo();
-refreshAllSelects();
-refreshDocument();
-saveState();
-const inputs=kvdContainer.querySelectorAll("[data-kvd-index]");
-if(inputs.length) inputs[inputs.length-1].focus();
-}
-
-function removeKvd(index){
-state.kvds.splice(index,1);
-state.routeInfo.kvds.splice(index,1);
-syncRouteInfoLength();
-renderKvds();
-renderRouteInfo();
-refreshAllSelects();
-refreshDocument();
-saveState();
-}
-
-function numericOnly(value){
-return String(value||"").replace(/\D/g,"").slice(0,3);
-}
-
-function attachNumericFilters(scope){
-scope.querySelectorAll(".numeric-field").forEach(input=>{
-input.addEventListener("input",event=>{event.target.value=numericOnly(event.target.value)});
-});
-}
-
-function setTheme(value){
-state.theme=value;
-document.body.classList.toggle("dark",value==="dark");
-document.getElementById("darkCheck").textContent=value==="dark"?"✓":"";
-document.getElementById("lightCheck").textContent=value==="light"?"✓":"";
-saveState();
-}
-
-function setPageLayout(value){
-state.pageLayout=value;
-document.body.classList.toggle("page-layout-horizontal",value==="horizontal");
-document.body.classList.toggle("page-layout-vertical",value==="vertical");
-document.getElementById("pageHorizontalCheck").textContent=value==="horizontal"?"✓":"";
-document.getElementById("pageVerticalCheck").textContent=value==="vertical"?"✓":"";
-saveState();
-}
-
-function renderKvds(){
-normalizeState();
-kvdContainer.innerHTML="";
-addFirstKvdBox.style.display=state.kvds.length===0?"block":"none";
-state.kvds.forEach((value,index)=>{
-const chip=document.createElement("div");
-chip.className="kvd-chip";
-chip.innerHTML=`
-<span class="kvd-label">KVD</span>
-<input class="kvd-input" value="${escapeHtml(value)}" type="text" maxlength="2" data-kvd-index="${index}">
-<button class="secondary kvd-small-button" data-remove-kvd="${index}" type="button">×</button>
-`;
-kvdContainer.appendChild(chip);
-});
-if(state.kvds.length>0){
-const addButton=document.createElement("button");
-addButton.className="secondary kvd-add-inline";
-addButton.type="button";
-addButton.textContent="+";
-addButton.addEventListener("click",addKvd);
-kvdContainer.appendChild(addButton);
-}
-kvdContainer.querySelectorAll("[data-kvd-index]").forEach(input=>{
-input.addEventListener("input",event=>{
-const index=Number(event.target.getAttribute("data-kvd-index"));
-event.target.value=event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,2);
-state.kvds[index]=event.target.value;
-syncRouteInfoLength();
-renderRouteInfo();
-refreshAllSelects();
-refreshDocument();
-saveState();
-});
-});
-kvdContainer.querySelectorAll("[data-remove-kvd]").forEach(button=>{
-button.addEventListener("click",event=>{
-const index=Number(event.target.getAttribute("data-remove-kvd"));
-removeKvd(index);
-});
-});
-}
-
-function renderRouteInfo(){
-normalizeState();
-routeInfoContent.style.display=state.routeInfoVisible?"block":"none";
-toggleRouteInfoButton.textContent=state.routeInfoVisible?"- Route info verbergen":"+ Route info tonen";
-routeInfoContainer.innerHTML="";
-const hvdName=hvdInput.value.trim().toUpperCase();
-
-if(hvdName){
-const hvdBlock=document.createElement("div");
-hvdBlock.innerHTML=`
-<h3>HVD registratie</h3>
-<h3>H positie</h3>
-<div class="grid-three">
-<div><label>Rij</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="h" data-field="row" value="${escapeHtml(state.routeInfo.hvd.h.row)}"></div>
-<div><label>Stijl</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="h" data-field="style" value="${escapeHtml(state.routeInfo.hvd.h.style)}"></div>
-<div><label>Stift</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="h" data-field="pin" value="${escapeHtml(state.routeInfo.hvd.h.pin)}"></div>
-</div>
-<h3>V positie</h3>
-<div class="grid-three">
-<div><label>Rij</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="v" data-field="row" value="${escapeHtml(state.routeInfo.hvd.v.row)}"></div>
-<div><label>Stijl</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="v" data-field="style" value="${escapeHtml(state.routeInfo.hvd.v.style)}"></div>
-<div><label>Stift</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="hvd" data-side="v" data-field="pin" value="${escapeHtml(state.routeInfo.hvd.v.pin)}"></div>
-</div>
-<div class="divider"></div>
-`;
-routeInfoContainer.appendChild(hvdBlock);
-}
-
-state.kvds.forEach((name,index)=>{
-const cleanName=name.trim().toUpperCase();
-if(!cleanName) return;
-const item=state.routeInfo.kvds[index];
-const block=document.createElement("div");
-block.innerHTML=`
-<h3>KVD ${escapeHtml(cleanName)}</h3>
-<h3>V positie</h3>
-<div class="grid-two">
-<div><label>Stijl</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="kvd" data-index="${index}" data-field="style" value="${escapeHtml(item.v.style)}"></div>
-<div><label>Stift</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="kvd" data-index="${index}" data-field="pin" value="${escapeHtml(item.v.pin)}"></div>
-</div>
-<div class="divider"></div>
-`;
-routeInfoContainer.appendChild(block);
-});
-
-attachNumericFilters(routeInfoContainer);
-routeInfoContainer.querySelectorAll("[data-route]").forEach(input=>{
-input.addEventListener("input",event=>{
-const route=event.target.getAttribute("data-route");
-const field=event.target.getAttribute("data-field");
-const value=numericOnly(event.target.value);
-event.target.value=value;
-if(route==="hvd"){
-const side=event.target.getAttribute("data-side");
-state.routeInfo.hvd[side][field]=value;
-}
-if(route==="kvd"){
-const index=Number(event.target.getAttribute("data-index"));
-state.routeInfo.kvds[index].v[field]=value;
-}
-autoFillNewPositionFromSelection(false);
-refreshDocument();
-saveState();
-});
-});
-refreshActiveServiceRouteInfo();
-}
-
-function setNote(element,text){
-if(text){
-element.textContent=text;
-element.classList.remove("hidden-note");
-}else{
-element.textContent="";
-element.classList.add("hidden-note");
-}
-}
-
-function refreshActiveServiceRouteInfo(){
-const serviceId=getCurrentServiceId();
-if(!serviceId){
-setNote(activeServiceRouteInfo,"");
-return;
-}
-if(state.services[serviceId]){
-const saved=state.newPositions[serviceId];
-if(saved && (saved.row || saved.style || saved.pin)){
-setNote(activeServiceRouteInfo,"Actieve Service ID: "+serviceId+" | "+state.services[serviceId].dikader+" | "+formatRegistration(saved));
-}else{
-setNote(activeServiceRouteInfo,"Actieve Service ID: "+serviceId+" | "+state.services[serviceId].dikader);
-}
-return;
-}
-setNote(activeServiceRouteInfo,"Nieuwe Service ID: "+serviceId);
-}
-
-function renderServiceSuggestions(){
-const ids=Object.keys(state.services);
-serviceSuggestions.innerHTML="";
-ids.forEach(id=>{
-const item=document.createElement("div");
-item.className="service-suggestion";
-item.textContent=id+" | "+state.services[id].dikader;
-item.addEventListener("mousedown",event=>{
-event.preventDefault();
-selectServiceId(id);
-});
-serviceSuggestions.appendChild(item);
-});
-if(ids.length===0) serviceSuggestions.classList.remove("open");
-}
-
-function showServiceSuggestions(){
-renderServiceSuggestions();
-if(Object.keys(state.services).length>0) serviceSuggestions.classList.add("open");
-}
-
-function hideServiceSuggestions(){
-serviceSuggestions.classList.remove("open");
-}
-
-function selectServiceId(serviceId){
-serviceInput.value=serviceId;
-state.activeServiceId=serviceId;
-hideServiceSuggestions();
-refreshDikaderOptions();
-autoFillNewPositionFromSelection(false);
-refreshLclServices();
-refreshActiveServiceRouteInfo();
-saveState();
-}
-
-function getRouteItems(){
-const items=[];
-const hvdName=hvdInput.value.trim().toUpperCase();
-if(hvdName) items.push({type:"hvd",index:null,label:"HVD "+hvdName});
-state.kvds.forEach((name,index)=>{
-const cleanName=name.trim().toUpperCase();
-if(cleanName) items.push({type:"kvd",index:index,label:"KVD "+cleanName});
-});
-items.push({type:"isra",index:null,label:"ISRA"});
-return items;
-}
-
-function refreshAllSelects(){
-renderServiceSuggestions();
-refreshPositionOptions();
-refreshNewPositionOptions();
-refreshLclServices();
-refreshDikaderOptions();
-refreshActiveServiceRouteInfo();
-}
-
-function getCurrentServiceId(){
-return serviceInput.value.trim();
-}
-
-function refreshPositionOptions(){
-const items=getRouteItems();
-const oldPosition=positionSelect.value;
-const oldDirection=directionSelect.value;
-positionSelect.innerHTML="";
-items.forEach(item=>{
-const option=document.createElement("option");
-option.value=item.label;
-option.textContent=item.label;
-positionSelect.appendChild(option);
-});
-if(items.some(item=>item.label===oldPosition)) positionSelect.value=oldPosition;
-refreshDirectionOptions(oldDirection);
-}
-
-function refreshDirectionOptions(preferredValue){
-const items=getRouteItems();
-const selectedPosition=positionSelect.value;
-directionSelect.innerHTML="";
-items.filter(item=>item.label!==selectedPosition).forEach(item=>{
-const option=document.createElement("option");
-option.value=item.label;
-option.textContent=item.label;
-directionSelect.appendChild(option);
-});
-if([...directionSelect.options].some(option=>option.value===preferredValue)) directionSelect.value=preferredValue;
-autoFillNewPositionFromSelection(false);
-}
-
-function refreshNewPositionOptions(){
-const items=getRouteItems().filter(item=>item.type!=="isra");
-const oldValue=newPositionSelect.value;
-newPositionSelect.innerHTML="";
-items.forEach(item=>{
-const option=document.createElement("option");
-option.value=item.label;
-option.textContent=item.label;
-newPositionSelect.appendChild(option);
-});
-if([...newPositionSelect.options].some(option=>option.value===oldValue)){
-newPositionSelect.value=oldValue;
-}else if([...newPositionSelect.options].some(option=>option.value===positionSelect.value)){
-newPositionSelect.value=positionSelect.value;
-}
-autoFillNewPositionFromSelection(false);
-}
-
-function refreshLclServices(){
-const current=lclServiceSelect.value;
-const active=getCurrentServiceId();
-lclServiceSelect.innerHTML="";
-Object.keys(state.services).forEach(id=>{
-const option=document.createElement("option");
-option.value=id;
-option.textContent=id+" ("+state.services[id].dikader+")";
-lclServiceSelect.appendChild(option);
-});
-if([...lclServiceSelect.options].some(option=>option.value===active)){
-lclServiceSelect.value=active;
-}else if([...lclServiceSelect.options].some(option=>option.value===current)){
-lclServiceSelect.value=current;
-}
-refreshLclInfo();
-}
-
-function refreshLclPositionOptions(){
-const current=lclPositionSelect.value;
-const serviceId=lclServiceSelect.value;
-const serviceMeasurements=state.measurements.filter(item=>item.serviceId===serviceId);
-lclPositionSelect.innerHTML="";
-if(serviceMeasurements.length>0){
-serviceMeasurements.forEach(item=>{
-const option=document.createElement("option");
-option.value=item.position+" → "+item.direction+" | "+item.dikader;
-option.textContent=item.position+" → "+item.direction+" | "+item.dikader;
-lclPositionSelect.appendChild(option);
-});
-}else{
-getRouteItems().forEach(item=>{
-const option=document.createElement("option");
-option.value=item.label;
-option.textContent=item.label;
-lclPositionSelect.appendChild(option);
-});
-}
-if([...lclPositionSelect.options].some(option=>option.value===current)) lclPositionSelect.value=current;
-}
-
-function getRegistrationForPosition(label){
-const item=getRouteItems().find(routeItem=>routeItem.label===label);
-if(!item) return {row:"",style:"",pin:""};
-if(item.type==="hvd"){
-return {row:state.routeInfo.hvd.h.row||"",style:state.routeInfo.hvd.h.style||"",pin:state.routeInfo.hvd.h.pin||""};
-}
-if(item.type==="kvd" && state.routeInfo.kvds[item.index]){
-return {row:"",style:state.routeInfo.kvds[item.index].v.style||"",pin:state.routeInfo.kvds[item.index].v.pin||""};
-}
-return {row:"",style:"",pin:""};
-}
-
-function getCurrentNewPositionKey(){
-const id=getCurrentServiceId();
-return id || "__draft__";
-}
-
-function autoFillNewPositionFromSelection(force){
-const key=getCurrentNewPositionKey();
-const saved=state.newPositions[key];
-if(saved && !force){
-if([...newPositionSelect.options].some(option=>option.value===saved.position)) newPositionSelect.value=saved.position;
-newRowInput.value=saved.row||"";
-newStyleInput.value=saved.style||"";
-newPinInput.value=saved.pin||"";
-refreshActiveServiceRouteInfo();
-return;
-}
-if([...newPositionSelect.options].some(option=>option.value===positionSelect.value)) newPositionSelect.value=positionSelect.value;
-const reg=getRegistrationForPosition(newPositionSelect.value);
-newRowInput.value=reg.row||"";
-newStyleInput.value=reg.style||"";
-newPinInput.value=reg.pin||"";
-saveCurrentNewPosition(false);
-}
-
-function saveCurrentNewPosition(writeState){
-const key=getCurrentNewPositionKey();
-state.newPositions[key]={position:newPositionSelect.value,row:numericOnly(newRowInput.value),style:numericOnly(newStyleInput.value),pin:numericOnly(newPinInput.value)};
-newRowInput.value=state.newPositions[key].row;
-newStyleInput.value=state.newPositions[key].style;
-newPinInput.value=state.newPositions[key].pin;
-refreshActiveServiceRouteInfo();
-refreshDocument();
-if(writeState!==false) saveState();
-}
-
-function clearCurrentNewPosition(){
-const key=getCurrentNewPositionKey();
-delete state.newPositions[key];
-const reg=getRegistrationForPosition(newPositionSelect.value);
-newRowInput.value=reg.row||"";
-newStyleInput.value=reg.style||"";
-newPinInput.value=reg.pin||"";
-saveCurrentNewPosition();
-}
-
-function refreshDikaderOptions(){
-const id=getCurrentServiceId();
-dikaderSelect.innerHTML="";
-if(id && state.services[id]){
-const option=document.createElement("option");
-option.value=state.services[id].dikader;
-option.textContent=state.services[id].dikader;
-dikaderSelect.appendChild(option);
-dikaderSelect.disabled=true;
-setNote(dikaderNote,"Gekoppeld aan "+state.services[id].dikader+".");
-autoFillNewPositionFromSelection(false);
-refreshActiveServiceRouteInfo();
-return;
-}
-const used=Object.values(state.services).map(item=>item.dikader);
-for(let i=1;i<=20;i++){
-const value="dik"+i;
-if(!used.includes(value)){
-const option=document.createElement("option");
-option.value=value;
-option.textContent=value;
-dikaderSelect.appendChild(option);
-}
-}
-dikaderSelect.disabled=false;
-setNote(dikaderNote,"");
-autoFillNewPositionFromSelection(false);
-refreshActiveServiceRouteInfo();
-}
-
-function refreshLclInfo(){
-const id=lclServiceSelect.value;
-if(!id || !state.services[id]){
-setNote(lclInfo,"");
-refreshLclPositionOptions();
-return;
-}
-setNote(lclInfo,"Gekoppelde dikader: "+state.services[id].dikader);
-refreshLclPositionOptions();
-}
-
+function emptyVInfo(){return{sipStijl:"",sipStift:"",vStijl:"",vStift:""}}
+function emptyRouteInfo(){return{hvd:{hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""},kvds:[]}}
+function normalizeRouteInfo(info){if(!info)info=emptyRouteInfo();if(!info.hvd)info.hvd={hRij:"",hStijl:"",hStift:"",vRij:"",vStijl:"",vStift:""};["hRij","hStijl","hStift","vRij","vStijl","vStift"].forEach(k=>{if(!(k in info.hvd))info.hvd[k]="";info.hvd[k]=limitRegistrationValue(info.hvd[k])});if(!Array.isArray(info.kvds))info.kvds=[];while(info.kvds.length<state.kvds.length)info.kvds.push(emptyVInfo());info.kvds.forEach(i=>["sipStijl","sipStift","vStijl","vStift"].forEach(k=>{if(!(k in i))i[k]="";i[k]=limitRegistrationValue(i[k])}));return info}
+function cloneRouteInfo(info){const src=normalizeRouteInfo(info||emptyRouteInfo());return{hvd:{hRij:src.hvd.hRij||"",hStijl:src.hvd.hStijl||"",hStift:src.hvd.hStift||"",vRij:src.hvd.vRij||"",vStijl:src.hvd.vStijl||"",vStift:src.hvd.vStift||""},kvds:state.kvds.map((_,i)=>({sipStijl:src.kvds[i]?.sipStijl||"",sipStift:src.kvds[i]?.sipStift||"",vStijl:src.kvds[i]?.vStijl||"",vStift:src.kvds[i]?.vStift||""}))}}
+function cloneRouteInfoForNewService(){const src=cloneRouteInfo(state.lastRouteInfoTemplate||state.routeInfo);return{hvd:{hRij:src.hvd.hRij,hStijl:src.hvd.hStijl,hStift:"",vRij:src.hvd.vRij,vStijl:src.hvd.vStijl,vStift:""},kvds:src.kvds.map(i=>({sipStijl:i.sipStijl,sipStift:"",vStijl:i.vStijl,vStift:""}))}}
+function normalizeAllRouteInfos(){state.routeInfo=normalizeRouteInfo(state.routeInfo);state.lastRouteInfoTemplate=normalizeRouteInfo(state.lastRouteInfoTemplate||cloneRouteInfo(state.routeInfo));if(!state.serviceRouteInfo||Array.isArray(state.serviceRouteInfo))state.serviceRouteInfo={};Object.keys(state.serviceRouteInfo).forEach(id=>state.serviceRouteInfo[id]=normalizeRouteInfo(state.serviceRouteInfo[id]))}
+function activeServiceId(){return serviceInput.value.trim()}
+function ensureActiveServiceRouteInfo(){const id=activeServiceId();if(!id)return normalizeRouteInfo(state.routeInfo);if(!state.serviceRouteInfo[id])state.serviceRouteInfo[id]=cloneRouteInfoForNewService();return normalizeRouteInfo(state.serviceRouteInfo[id])}
+function routeInfoForService(id){if(id&&state.serviceRouteInfo[id])return normalizeRouteInfo(state.serviceRouteInfo[id]);return normalizeRouteInfo(state.routeInfo)}
+function sortedServiceIds(){return Object.keys(state.services).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}))}
+function routeInfoServiceLabel(id){return id?String(id||"")+(state.services[id]||""):""}
+function routeInfoSelectedId(){const ids=sortedServiceIds();if(state.routeInfoSelectedServiceId&&ids.includes(state.routeInfoSelectedServiceId))return state.routeInfoSelectedServiceId;const active=activeServiceId();if(active&&ids.includes(active))return active;return ids[0]||""}
+function routeInfoEditableInfo(){const id=routeInfoSelectedId();if(id){state.routeInfoSelectedServiceId=id;if(!state.serviceRouteInfo[id])state.serviceRouteInfo[id]=cloneRouteInfoForNewService();return normalizeRouteInfo(state.serviceRouteInfo[id])}return ensureActiveServiceRouteInfo()}
+function renderRouteInfoServiceSelect(){const ids=sortedServiceIds();routeInfoServiceSelect.innerHTML="";if(!state.routeInfoVisible||!ids.length){routeInfoServiceSelect.classList.add("hidden");return}const selected=routeInfoSelectedId();ids.forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=routeInfoServiceLabel(id);routeInfoServiceSelect.appendChild(o)});routeInfoServiceSelect.value=selected;routeInfoServiceSelect.classList.remove("hidden")}
+function updateRouteTemplate(info){state.lastRouteInfoTemplate=cloneRouteInfo(info)}
+function cleanRouteChangeValue(position,value){const p=String(position||"").trim().toUpperCase();const v=String(value||"").trim();if(p.startsWith("KVD ")&&v.startsWith("--- "))return v.replace(/^---\s+/,"");return v}
+function cleanRouteChangeList(list){return(Array.isArray(list)?list:[]).map(change=>({position:change.position,value:cleanRouteChangeValue(change.position,change.value)}))}
+function parseRouteChangeParts(value){const raw=String(value||"").trim();const parts={raw,h:"",v:"",sip:"",hasMarkers:false};raw.split("|").map(v=>v.trim()).filter(Boolean).forEach(part=>{const m=part.match(/^(H|V|SIP)\s+(.+)$/i);if(m){parts.hasMarkers=true;parts[m[1].toLowerCase()]=m[2].trim()}});return parts}
+function routeChangeValueFor(parts,key,fallback,useRaw){if(parts&&parts[key])return parts[key];if(useRaw&&parts&&parts.raw&&!parts.hasMarkers)return parts.raw;return fallback}
+function limitRegistrationValue(value){return String(value||"").trim().toUpperCase().slice(0,3)}
+function normalizeRegistrationInput(input){input.value=limitRegistrationValue(input.value)}
+function saveState(){state.hvd=hvdInput.value.trim().toUpperCase();localStorage.setItem("kopermetingen",JSON.stringify(state))}
+function loadState(){const stored=localStorage.getItem("kopermetingen");if(stored){try{Object.assign(state,JSON.parse(stored))}catch(e){}}if(!Array.isArray(state.kvds))state.kvds=[];if(typeof state.routeVisible!=="boolean")state.routeVisible=true;if(typeof state.routeInfoVisible!=="boolean")state.routeInfoVisible=false;if(typeof state.currentRouteVisible!=="boolean")state.currentRouteVisible=true;if(typeof state.measurementVisible!=="boolean")state.measurementVisible=true;if(typeof state.newPositionVisible!=="boolean")state.newPositionVisible=true;if(typeof state.lclVisible!=="boolean")state.lclVisible=true;if(typeof state.routeInfoSelectedServiceId!=="string")state.routeInfoSelectedServiceId="";if(!state.services)state.services={};if(!Array.isArray(state.measurements))state.measurements=[];if(!Array.isArray(state.lcls)){const old=state.lcls||{};state.lcls=[];Object.keys(old).forEach(id=>state.lcls.push({serviceId:id,measurementId:"",routeLine:"",value:old[id]}))}if(!state.routeChanges||Array.isArray(state.routeChanges))state.routeChanges={};Object.keys(state.routeChanges).forEach(id=>state.routeChanges[id]=cleanRouteChangeList(state.routeChanges[id]));if(!state.routeRestored||Array.isArray(state.routeRestored))state.routeRestored={};normalizeAllRouteInfos();Object.keys(state.services).forEach(id=>{if(!state.serviceRouteInfo[id])state.serviceRouteInfo[id]=cloneRouteInfo(state.routeInfo)});state.measurements.forEach((m,i)=>{if(!m.id)m.id="m"+Date.now()+"_"+i;if(!m.positionText)m.positionText=buildPositionText(m.position,m.direction,m.dikader);m.routeChanges=cleanRouteChangeList(m.routeChanges)})}
+function setTheme(v){state.theme=v;document.body.classList.toggle("dark",v==="dark");document.getElementById("darkCheck").textContent=v==="dark"?"✓":"";document.getElementById("lightCheck").textContent=v==="light"?"✓":"";saveState()}
+function setPageLayout(v){state.pageLayout=v;document.body.classList.toggle("page-layout-horizontal",v==="horizontal");document.body.classList.toggle("page-layout-vertical",v==="vertical");document.getElementById("pageHorizontalCheck").textContent=v==="horizontal"?"✓":"";document.getElementById("pageVerticalCheck").textContent=v==="vertical"?"✓":"";saveState()}
+function renderKvds(){kvdContainer.innerHTML="";state.kvds.forEach((value,index)=>{const row=document.createElement("div");row.className="kvd-row";const label=document.createElement("label");label.textContent="KVD";const input=document.createElement("input");input.value=value||"";input.placeholder="AA";input.addEventListener("input",()=>{state.kvds[index]=input.value.trim().toUpperCase();normalizeAllRouteInfos();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});const remove=document.createElement("button");remove.className="secondary";remove.type="button";remove.textContent="×";remove.addEventListener("click",()=>{state.kvds.splice(index,1);state.routeInfo.kvds.splice(index,1);Object.keys(state.serviceRouteInfo).forEach(id=>state.serviceRouteInfo[id].kvds.splice(index,1));if(state.lastRouteInfoTemplate)state.lastRouteInfoTemplate.kvds.splice(index,1);renderKvds();normalizeAllRouteInfos();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});row.appendChild(label);row.appendChild(input);row.appendChild(remove);kvdContainer.appendChild(row)})}
+function addKvd(){state.kvds.push("");state.routeInfo.kvds.push(emptyVInfo());Object.keys(state.serviceRouteInfo).forEach(id=>state.serviceRouteInfo[id].kvds.push(emptyVInfo()));if(state.lastRouteInfoTemplate)state.lastRouteInfoTemplate.kvds.push(emptyVInfo());renderKvds();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()}
+function firstFilledKvdIndex(){return state.kvds.findIndex(n=>String(n||"").trim())}
+function kvdNeedsSip(i){return !hvdInput.value.trim()&&firstFilledKvdIndex()===i}
+function setRouteInfoValue(type,index,key,value){const cleanValue=limitRegistrationValue(value);const info=routeInfoEditableInfo();if(type==="hvd")info.hvd[key]=cleanValue;else{if(!info.kvds[index])info.kvds[index]=emptyVInfo();info.kvds[index][key]=cleanValue}updateRouteTemplate(info);prefillNewPositionFromService(false);refreshDocument();saveState()}
+function renderSectionVisibility(){routePanel.style.display=state.routeVisible?"block":"none";toggleRouteButton.textContent=state.routeVisible?"−":"+";routePanel.closest(".card").classList.toggle("collapsed-card",!state.routeVisible);currentRoutePanel.style.display=state.currentRouteVisible?"block":"none";toggleCurrentRouteButton.textContent=state.currentRouteVisible?"−":"+";currentRoutePanel.closest(".card").classList.toggle("collapsed-card",!state.currentRouteVisible);measurementPanel.style.display=state.measurementVisible?"block":"none";toggleMeasurementButton.textContent=state.measurementVisible?"−":"+";newPositionPanel.style.display=state.newPositionVisible?"block":"none";toggleNewPositionButton.textContent=state.newPositionVisible?"−":"+";newPositionPanel.closest(".card").classList.toggle("collapsed-card",!state.newPositionVisible);lclPanel.style.display=state.lclVisible?"block":"none";toggleLclButton.textContent=state.lclVisible?"−":"+";lclPanel.closest(".card").classList.toggle("collapsed-card",!state.lclVisible)}
+function renderRouteInfo(){const info=routeInfoEditableInfo();routeInfoPanel.style.display=state.routeInfoVisible?"block":"none";toggleRouteInfoButton.textContent=state.routeInfoVisible?"−":"+";routeInfoPanel.closest(".card").classList.toggle("collapsed-card",!state.routeInfoVisible);renderRouteInfoServiceSelect();routeInfoPanel.innerHTML="";if(!state.routeInfoVisible)return;if(hvdInput.value.trim()){const b=document.createElement("div");b.className="route-info-block";const hvdName="HVD "+hvdInput.value.trim().toUpperCase();b.innerHTML=`<div class="route-info-title">${escapeHtml(hvdName)}</div><div class="route-info-line-three"><div class="route-info-axis">H</div><div class="route-info-column">Rij</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hRij)}" placeholder="000" data-route-info="hvd" data-key="hRij"><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hStijl)}" placeholder="000" data-route-info="hvd" data-key="hStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hStift)}" placeholder="000" data-route-info="hvd" data-key="hStift"></div><div class="route-info-line-three"><div class="route-info-axis">V</div><div class="route-info-column">Rij</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vRij)}" placeholder="000" data-route-info="hvd" data-key="vRij"><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vStijl)}" placeholder="000" data-route-info="hvd" data-key="vStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vStift)}" placeholder="000" data-route-info="hvd" data-key="vStift"></div>`;routeInfoPanel.appendChild(b)}state.kvds.forEach((name,index)=>{const cleanName=String(name||"").trim().toUpperCase();if(!cleanName)return;if(!info.kvds[index])info.kvds[index]=emptyVInfo();const item=info.kvds[index],showSip=kvdNeedsSip(index);const b=document.createElement("div");b.className="route-info-block";b.innerHTML=`<div class="route-info-title">KVD ${cleanName}</div>${showSip?`<div class="route-info-line-two"><div class="route-info-axis">SIP</div><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(item.sipStijl)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(item.sipStift)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStift"></div>`:""}<div class="route-info-line-two"><div class="route-info-axis">V</div><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(item.vStijl)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="vStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(item.vStift)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="vStift"></div>`;routeInfoPanel.appendChild(b)});routeInfoPanel.querySelectorAll("[data-route-info]").forEach(input=>input.addEventListener("input",()=>{normalizeRegistrationInput(input);setRouteInfoValue(input.getAttribute("data-route-info"),Number(input.getAttribute("data-index")||0),input.getAttribute("data-key"),input.value)}))}
+function currentRouteServiceIds(){const ids=sortedServiceIds();const known=[...new Set([...state.measurements.map(m=>m.serviceId),...state.lcls.map(l=>l.serviceId),...Object.keys(state.routeRestored)])].filter(Boolean);known.forEach(id=>{if(!ids.includes(id))ids.push(id)});const active=activeServiceId();if(active&&!ids.includes(active))ids.push(active);return ids}
+function currentRouteLine(name,value,width){const left=String(name||"").padEnd(width," ");return value?left+" | "+value:left}
+function buildCurrentRouteLines(serviceId){const info=routeInfoForService(serviceId);const changes=snapshotRouteChanges(serviceId);const rows=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const changed=changes.find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");const h=routeChangeValueFor(parts,"h",formatH(info.hvd),false);const v=routeChangeValueFor(parts,"v",formatV(info.hvd),Boolean(changed));if(h)rows.push({name,value:h});else rows.push({name,value:""});if(v)rows.push({name:"",value:v})}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const name="KVD "+clean;const item=info.kvds[index];const changed=changes.find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");const sip=routeChangeValueFor(parts,"sip",kvdNeedsSip(index)?formatSip(item):"",false);const v=routeChangeValueFor(parts,"v",formatKvdV(item),Boolean(changed));if(sip)rows.push({name,value:sip});if(v)rows.push({name:sip?"":name,value:v});if(!sip&&!v)rows.push({name,value:""})});rows.push({name:"ISRA",value:state.services[serviceId]||"-"});const width=Math.max(4,...rows.map(row=>String(row.name||"").length));return rows.map(row=>currentRouteLine(row.name,row.value,width))}
+function renderCurrentRoute(){if(!currentRouteOutput)return;const ids=currentRouteServiceIds();currentRouteOutput.innerHTML="";if(!ids.length){const empty=document.createElement("div");empty.className="current-route-empty";empty.textContent="Nog geen Service ID gekoppeld.";currentRouteOutput.appendChild(empty);return}ids.forEach(id=>{const card=document.createElement("div");card.className="current-route-card";const title=document.createElement("div");title.className="current-route-title";title.textContent=routeInfoServiceLabel(id)||id;const lines=document.createElement("div");lines.className="current-route-lines";lines.textContent=buildCurrentRouteLines(id).join("\n");card.appendChild(title);card.appendChild(lines);currentRouteOutput.appendChild(card)})}
+function formatRouteNumber(v){const raw=limitRegistrationValue(v);if(!raw)return"---";return /^\d+$/.test(raw)?raw.padStart(3,"0"):raw}
+function formatH(i){if(!i||(!i.hRij&&!i.hStijl&&!i.hStift))return"";return formatRouteNumber(i.hRij)+" "+formatRouteNumber(i.hStijl)+" "+formatRouteNumber(i.hStift)}
+function formatV(i){if(!i||(!i.vRij&&!i.vStijl&&!i.vStift))return"";return formatRouteNumber(i.vRij)+" "+formatRouteNumber(i.vStijl)+" "+formatRouteNumber(i.vStift)}
+function formatKvdV(i){if(!i||(!i.vStijl&&!i.vStift))return"";return formatRouteNumber(i.vStijl)+" "+formatRouteNumber(i.vStift)}
+function formatSip(i){if(!i||(!i.sipStijl&&!i.sipStift))return"";return formatRouteNumber(i.sipStijl)+" "+formatRouteNumber(i.sipStift)}
+function allRouteNames(){const names=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd)names.push("HVD "+hvd);state.kvds.map(v=>String(v||"").trim().toUpperCase()).filter(Boolean).forEach(v=>names.push("KVD "+v));names.push("ISRA");return names}
+function routeNameWidth(){return Math.max(6,...allRouteNames().map(x=>x.length))}
+function routeLine(name,tag,value){const left=String(name||"").padEnd(routeNameWidth()," ");const label=String(tag||"").padEnd(3," ");return value?left+" "+label+" | "+value:left}
+function routeBlank(tag,value){const left="".padEnd(routeNameWidth()," ");const label=String(tag||"").padEnd(3," ");return left+" "+label+" | "+value}
+function newPositionInputs(){return[newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput,newPositionSipStijlInput,newPositionSipStiftInput,newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput,newPositionVRijInput,newPositionVStijlInput,newPositionVStiftInput]}
+function newPositionServiceId(){return activeServiceId()||routeInfoSelectedId()}
+function newPositionSourceKey(){return newPositionServiceId()+"|"+String(newPositionSelect.value||"").trim().toUpperCase()}
+function setNewPositionPrefill(input,value){if(input)input.value=limitRegistrationValue(value)}
+function splitRouteValue(value){const parts=String(value||"").trim().split(/\s+/).filter(Boolean);return{rij:parts[0]||"",stijl:parts[1]||"",stift:parts[2]||"",first:parts[0]||"",second:parts[1]||""}}
+function currentHvdRouteParts(serviceId,key){const info=routeInfoForService(serviceId);const name="HVD "+hvdInput.value.trim().toUpperCase();const changed=snapshotRouteChanges(serviceId).find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");return splitRouteValue(routeChangeValueFor(parts,key,key==="h"?formatH(info.hvd):formatV(info.hvd),Boolean(changed)&&key==="v"))}
+function currentKvdRouteParts(serviceId,index,key){const clean=String(state.kvds[index]||"").trim().toUpperCase();const info=routeInfoForService(serviceId);const item=info.kvds[index]||emptyVInfo();const name="KVD "+clean;const changed=snapshotRouteChanges(serviceId).find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");return splitRouteValue(routeChangeValueFor(parts,key,key==="sip"?formatSip(item):formatKvdV(item),Boolean(changed)&&key==="v"))}
+function prefillNewPositionFromService(force){const key=newPositionSourceKey();if(!force&&newPositionDirty)return;if(!force&&newPositionPrefillKey===key)return;newPositionPrefillKey=key;clearInputs(newPositionInputs());const serviceId=newPositionServiceId();const position=String(newPositionSelect.value||"").trim().toUpperCase();if(!serviceId||!position){newPositionDirty=false;return}if(position.startsWith("HVD ")){const h=currentHvdRouteParts(serviceId,"h"),v=currentHvdRouteParts(serviceId,"v");setNewPositionPrefill(newPositionHRijInput,h.rij);setNewPositionPrefill(newPositionHStijlInput,h.stijl);setNewPositionPrefill(newPositionHStiftInput,h.stift);setNewPositionPrefill(newPositionVRijInput,v.rij);setNewPositionPrefill(newPositionVStijlInput,v.stijl);setNewPositionPrefill(newPositionVStiftInput,v.stift)}else if(position.startsWith("KVD ")){const index=newPositionKvdIndex();if(index>=0){const v=currentKvdRouteParts(serviceId,index,"v");if(newPositionShowsSip()){const sip=currentKvdRouteParts(serviceId,index,"sip");setNewPositionPrefill(newPositionSipStijlInput,sip.first);setNewPositionPrefill(newPositionSipStiftInput,sip.second)}else{const previous=newPositionPreviousRouteItem();if(previous.startsWith("HVD ")){const pv=currentHvdRouteParts(serviceId,"v");setNewPositionPrefill(newPositionKvdHRijInput,pv.rij);setNewPositionPrefill(newPositionKvdHStijlInput,pv.stijl);setNewPositionPrefill(newPositionKvdHStiftInput,pv.stift)}else if(previous.startsWith("KVD ")){const previousIndex=getRouteItemsForNewPosition().indexOf(previous)-(hvdInput.value.trim()?1:0);const pv=currentKvdRouteParts(serviceId,previousIndex,"v");setNewPositionPrefill(newPositionKvdHStijlInput,pv.first);setNewPositionPrefill(newPositionKvdHStiftInput,pv.second)}}setNewPositionPrefill(newPositionVStijlInput,v.first);setNewPositionPrefill(newPositionVStiftInput,v.second)}}newPositionDirty=false}
+function clearInputs(inputs){inputs.forEach(input=>input.value="")}
+function rowHasValue(inputs){return inputs.some(input=>String(input.value||"").trim())}
+function newPositionKvdIndex(){const position=String(newPositionSelect.value||"").trim().toUpperCase();if(!position.startsWith("KVD "))return -1;const name=position.replace(/^KVD\s+/,"");return state.kvds.findIndex(v=>String(v||"").trim().toUpperCase()===name)}
+function newPositionShowsSip(){const index=newPositionKvdIndex();return index>=0&&kvdNeedsSip(index)}
+function newPositionKvdHNeedsRij(){const index=newPositionKvdIndex();return Boolean(hvdInput.value.trim())&&index>=0&&firstFilledKvdIndex()===index}
+function newPositionPreviousRouteItem(){const position=String(newPositionSelect.value||"").trim().toUpperCase();const items=getRouteItemsForNewPosition();const index=items.indexOf(position);return index>0?items[index-1]:""}
+function rowTwoValue(a,b){return[formatRouteNumber(a.value),formatRouteNumber(b.value)].join(" ")}
+function rowThreeValue(a,b,c){return[formatRouteNumber(a.value),formatRouteNumber(b.value),formatRouteNumber(c.value)].join(" ")}
+function rowThreeValueWithDefault(a,b,c,defaultA){return[formatRouteNumber(a.value||defaultA),formatRouteNumber(b.value),formatRouteNumber(c.value)].join(" ")}
+function routeChangePartsToValue(parts){const out=[];if(parts.h)out.push("H "+parts.h);if(parts.sip)out.push("SIP "+parts.sip);if(parts.v)out.push("V "+parts.v);return out.join(" | ")}
+function newPositionKvdHBaseRij(serviceId){const previous=newPositionPreviousRouteItem();if(!previous.startsWith("HVD "))return"";const changed=snapshotRouteChanges(serviceId).find(change=>change.position===previous);const parts=parseRouteChangeParts(changed?changed.value:"");if(parts.v)return String(parts.v).trim().split(/\s+/)[0]||"";return routeInfoForService(serviceId).hvd.vRij||""}
+function updateRouteChangePart(serviceId,position,key,value){if(!position||!value)return;if(!state.routeChanges[serviceId])state.routeChanges[serviceId]=[];const current=state.routeChanges[serviceId].find(change=>change.position===position);const parts=parseRouteChangeParts(current?current.value:"");if(parts.raw&&!parts.hasMarkers&&!parts.v)parts.v=parts.raw;parts[key]=value;updateRouteChanges(serviceId,position,routeChangePartsToValue(parts))}
+function applyNewPositionChanges(serviceId){const position=String(newPositionSelect.value||"").trim().toUpperCase();if(!position)return;if(position.startsWith("HVD ")){const parts=[];if(rowHasValue([newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput]))parts.push("H "+rowThreeValue(newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput));if(rowHasValue([newPositionVRijInput,newPositionVStijlInput,newPositionVStiftInput]))parts.push("V "+rowThreeValue(newPositionVRijInput,newPositionVStijlInput,newPositionVStiftInput));if(parts.length)updateRouteChanges(serviceId,position,parts.join(" | "));return}if(position.startsWith("KVD ")){const showSip=newPositionShowsSip();if(showSip){const parts=[];if(rowHasValue([newPositionSipStijlInput,newPositionSipStiftInput]))parts.push("SIP "+rowTwoValue(newPositionSipStijlInput,newPositionSipStiftInput));if(rowHasValue([newPositionVStijlInput,newPositionVStiftInput]))parts.push("V "+rowTwoValue(newPositionVStijlInput,newPositionVStiftInput));if(parts.length)updateRouteChanges(serviceId,position,parts.join(" | "));return}const kvdHNeedsRij=newPositionKvdHNeedsRij();if(kvdHNeedsRij&&rowHasValue([newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput]))updateRouteChangePart(serviceId,newPositionPreviousRouteItem(),"v",rowThreeValueWithDefault(newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput,newPositionKvdHBaseRij(serviceId)));if(!kvdHNeedsRij&&rowHasValue([newPositionKvdHStijlInput,newPositionKvdHStiftInput]))updateRouteChangePart(serviceId,newPositionPreviousRouteItem(),"v",rowTwoValue(newPositionKvdHStijlInput,newPositionKvdHStiftInput));if(rowHasValue([newPositionVStijlInput,newPositionVStiftInput]))updateRouteChangePart(serviceId,position,"v",rowTwoValue(newPositionVStijlInput,newPositionVStiftInput))}}
+function hasNewPositionInput(){return Boolean(newPositionSelect.value&&newPositionDirty&&newPositionInputs().some(input=>String(input.value||"").trim()))}
+function updateNewPositionLayout(){const position=String(newPositionSelect.value||"").trim().toUpperCase();const isHvd=position.startsWith("HVD ");const isKvd=position.startsWith("KVD ");const showSip=isKvd&&newPositionShowsSip();const showKvdH=isKvd&&!showSip;const kvdHNeedsRij=showKvdH&&newPositionKvdHNeedsRij();newPositionHRow.classList.toggle("hidden",!isHvd);newPositionSipRow.classList.toggle("hidden",!showSip);newPositionKvdHRow.classList.toggle("hidden",!showKvdH);newPositionKvdHRow.classList.toggle("kvd-mode",!kvdHNeedsRij);newPositionKvdHRijBlock.classList.toggle("hidden",!kvdHNeedsRij);newPositionKvdHRijInput.classList.toggle("hidden",!kvdHNeedsRij);newPositionVRow.classList.toggle("hidden",!(isHvd||isKvd));newPositionVRow.classList.toggle("kvd-mode",!isHvd);newPositionVRijBlock.classList.toggle("hidden",!isHvd);newPositionVRijInput.classList.toggle("hidden",!isHvd);if(!isHvd)clearInputs([newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput,newPositionVRijInput]);if(!showSip)clearInputs([newPositionSipStijlInput,newPositionSipStiftInput]);if(!showKvdH)clearInputs([newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput]);if(showKvdH&&!kvdHNeedsRij)clearInputs([newPositionKvdHRijInput]);if(!isKvd&&!isHvd)clearInputs(newPositionInputs())}
+function formatNewPositionRowThree(a,b,c){return[formatRouteNumber(a.value),formatRouteNumber(b.value),formatRouteNumber(c.value)].join(" ")}
+function formatNewPositionRowThreeWithDefault(a,b,c,defaultA){return[formatRouteNumber(a.value||defaultA),formatRouteNumber(b.value),formatRouteNumber(c.value)].join(" ")}
+function formatNewPositionRowTwo(a,b){return[formatRouteNumber(a.value),formatRouteNumber(b.value)].join(" ")}
+function formatNewPositionValue(){const position=String(newPositionSelect.value||"").trim().toUpperCase();const parts=[];if(position.startsWith("HVD ")){if(rowHasValue([newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput]))parts.push("H "+formatNewPositionRowThree(newPositionHRijInput,newPositionHStijlInput,newPositionHStiftInput));if(rowHasValue([newPositionVRijInput,newPositionVStijlInput,newPositionVStiftInput]))parts.push("V "+formatNewPositionRowThree(newPositionVRijInput,newPositionVStijlInput,newPositionVStiftInput))}else if(position.startsWith("KVD ")){if(newPositionShowsSip()&&rowHasValue([newPositionSipStijlInput,newPositionSipStiftInput]))parts.push("SIP "+formatNewPositionRowTwo(newPositionSipStijlInput,newPositionSipStiftInput));if(!newPositionShowsSip()&&newPositionKvdHNeedsRij()&&rowHasValue([newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput]))parts.push("H "+formatNewPositionRowThreeWithDefault(newPositionKvdHRijInput,newPositionKvdHStijlInput,newPositionKvdHStiftInput,newPositionKvdHBaseRij(activeServiceId())));if(!newPositionShowsSip()&&!newPositionKvdHNeedsRij()&&rowHasValue([newPositionKvdHStijlInput,newPositionKvdHStiftInput]))parts.push("H "+formatNewPositionRowTwo(newPositionKvdHStijlInput,newPositionKvdHStiftInput));if(rowHasValue([newPositionVStijlInput,newPositionVStiftInput]))parts.push("V "+formatNewPositionRowTwo(newPositionVStijlInput,newPositionVStiftInput))}return parts.join(" | ")}
+function buildRouteLines(serviceId,dikader){const info=routeInfoForService(serviceId);const lines=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const h=formatH(info.hvd),v=formatV(info.hvd);if(h)lines.push(routeLine(name,"H",h));else lines.push(name);if(v)lines.push(routeBlank("V",v))}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const name="KVD "+clean;const item=info.kvds[index];const sip=kvdNeedsSip(index)?formatSip(item):"";const v=formatKvdV(item);if(sip)lines.push(routeLine(name,"SIP",sip));if(v)lines.push(sip?routeBlank("V",v):routeLine(name,"V",v));if(!sip&&!v)lines.push(name)});lines.push(routeLine("ISRA","",dikader||"-"));return lines}
+function buildRestoredRouteLines(serviceId,dikader){const info=routeInfoForService(serviceId);const changes=snapshotRouteChanges(serviceId);const lines=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const changed=changes.find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");const h=routeChangeValueFor(parts,"h",formatH(info.hvd),false);const v=routeChangeValueFor(parts,"v",formatV(info.hvd),Boolean(changed));if(h)lines.push(routeLine(name,"H",h));else lines.push(name);if(v)lines.push(routeBlank("V",v))}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const name="KVD "+clean;const item=info.kvds[index];const changed=changes.find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");const sip=routeChangeValueFor(parts,"sip",kvdNeedsSip(index)?formatSip(item):"",false);const v=routeChangeValueFor(parts,"v",formatKvdV(item),Boolean(changed));if(sip)lines.push(routeLine(name,"SIP",sip));if(v)lines.push(sip?routeBlank("V",v):routeLine(name,"V",v));if(!sip&&!v)lines.push(name)});lines.push(routeLine("ISRA","",dikader||"-"));return lines}
+function buildRestoredRouteText(serviceId,dikader){return buildRestoredRouteLines(serviceId,dikader).join("\n")}
+function buildCompactRoute(serviceId,dikader){const info=routeInfoForService(serviceId);const changes=snapshotRouteChanges(serviceId),items=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd){const name="HVD "+hvd;const changed=changes.find(change=>change.position===name);const parts=parseRouteChangeParts(changed?changed.value:"");const h=routeChangeValueFor(parts,"h",formatH(info.hvd),false);const v=routeChangeValueFor(parts,"v",formatV(info.hvd),Boolean(changed));if(h)items.push(h);if(v)items.push(v)}state.kvds.forEach((nameValue,index)=>{const clean=String(nameValue||"").trim().toUpperCase();if(!clean)return;const routeName="KVD "+clean;const changed=changes.find(change=>change.position===routeName);const parts=parseRouteChangeParts(changed?changed.value:"");const sip=routeChangeValueFor(parts,"sip",kvdNeedsSip(index)?formatSip(info.kvds[index]):"",false);const v=routeChangeValueFor(parts,"v",formatKvdV(info.kvds[index]),Boolean(changed));if(sip)items.push(sip);if(v)items.push(v)});items.push("ISRA "+(dikader||"-"));return items.join(" | ")}
+function buildPositionText(position,direction,dikader){const base=(position||"-")+" → "+(direction||"-");return dikader?base+" | "+dikader:base}
+function clearNewPosition(){clearInputs(newPositionInputs());newDikaderSelect.value="";newPositionDirty=false;newPositionPrefillKey=newPositionSourceKey();updateNewPositionLayout();refreshNewDikaderOptions();saveState()}
+function getRouteItems(){const items=[];const hvd=hvdInput.value.trim().toUpperCase();if(hvd)items.push("HVD "+hvd);state.kvds.map(v=>String(v||"").trim().toUpperCase()).filter(Boolean).forEach(v=>items.push("KVD "+v));items.push("ISRA");return items}
+function getRouteItemsForNewPosition(){return getRouteItems().filter(i=>i!=="ISRA")}
+function lastRouteItemBeforeIsra(){const items=getRouteItemsForNewPosition();return items.length?items[items.length-1]:""}
+function canChangeDikaderAtNewPosition(){return newPositionSelect.value&&newPositionSelect.value===lastRouteItemBeforeIsra()}
+function sortRouteChanges(changes){const route=getRouteItems();return cleanRouteChangeList(changes).sort((a,b)=>{const ai=route.indexOf(a.position),bi=route.indexOf(b.position);return (ai<0?999:ai)-(bi<0?999:bi)})}
+function snapshotRouteChanges(serviceId){return sortRouteChanges(state.routeChanges[serviceId]||[]).map(change=>({position:change.position,value:cleanRouteChangeValue(change.position,change.value)}))}
+function updateRouteChanges(serviceId,position,value){if(!state.routeChanges[serviceId])state.routeChanges[serviceId]=[];const cleanValueForPosition=cleanRouteChangeValue(position,value);const current=state.routeChanges[serviceId].find(change=>change.position===position);if(current)current.value=cleanValueForPosition;else state.routeChanges[serviceId].push({position,value:cleanValueForPosition});state.routeChanges[serviceId]=sortRouteChanges(state.routeChanges[serviceId])}
+function refreshRouteOptions(){const items=getRouteItems(),newItems=getRouteItemsForNewPosition(),oldP=positionSelect.value,oldD=directionSelect.value,oldN=newPositionSelect.value;positionSelect.innerHTML="";newPositionSelect.innerHTML="";items.forEach(item=>{const o=document.createElement("option");o.value=item;o.textContent=item;positionSelect.appendChild(o)});newItems.forEach(item=>{const o=document.createElement("option");o.value=item;o.textContent=item;newPositionSelect.appendChild(o)});if(items.includes(oldP))positionSelect.value=oldP;if(newItems.includes(oldN))newPositionSelect.value=oldN;refreshDirectionOptions(oldD);refreshNewDikaderOptions();updateNewPositionLayout();prefillNewPositionFromService(false)}
+function refreshDirectionOptions(preferred){const items=getRouteItems(),selected=positionSelect.value;directionSelect.innerHTML="";items.filter(i=>i!==selected).forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;directionSelect.appendChild(o)});const options=[...directionSelect.options].map(o=>o.value);if(preferred&&options.includes(preferred))directionSelect.value=preferred;else if(options.includes("ISRA"))directionSelect.value="ISRA"}
+function renderServiceDropdown(){const ids=Object.keys(state.services).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));const query=serviceInput.value.trim().toLowerCase();const filtered=ids.filter(id=>id.toLowerCase().includes(query));serviceDropdown.innerHTML="";if(!filtered.length){serviceDropdown.classList.remove("open");return}filtered.forEach(id=>{const option=document.createElement("div");option.className="service-option";option.textContent=id+(state.services[id]?" | "+state.services[id]:"");option.onclick=()=>{serviceInput.value=id;unmarkAutoServiceDraft(id);state.routeInfoSelectedServiceId=id;renderServiceClear();ensureActiveServiceRouteInfo();serviceDropdown.classList.remove("open");renderRouteInfo();refreshDikaderOptions();refreshNewDikaderOptions();prefillNewPositionFromService(false);saveState()};serviceDropdown.appendChild(option)});serviceDropdown.classList.add("open")}
+function hideServiceDropdown(){serviceDropdown.classList.remove("open")}
+function renderServiceClear(){serviceClearButton.classList.toggle("visible",Boolean(serviceInput.value.trim()))}
+function clearServiceInput(){removeAutoServiceDraft("");serviceInput.value="";renderServiceClear();hideServiceDropdown();renderRouteInfo();refreshDikaderOptions();refreshNewDikaderOptions();prefillNewPositionFromService(false);refreshDocument();saveState()}
+function handleServiceInputChange(){renderServiceClear();const id=activeServiceId();if(id&&state.services[id])state.routeInfoSelectedServiceId=id;if(id)ensureActiveServiceRouteInfo();storeServiceIdFromMeasurement();renderServiceDropdown();refreshDikaderOptions();refreshNewDikaderOptions();prefillNewPositionFromService(false)}
+function refreshServices(){renderServiceDropdown();const old=lclServiceSelect.value;lclServiceSelect.innerHTML="";Object.keys(state.services).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"})).forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=id;lclServiceSelect.appendChild(o)});if([...lclServiceSelect.options].some(o=>o.value===old))lclServiceSelect.value=old;renderRouteInfoServiceSelect();refreshDikaderOptions();refreshNewDikaderOptions();refreshLclMeasurementOptions()}
+function getAvailableDikaders(allowCurrent){const currentService=serviceInput.value.trim(),current=state.services[currentService]||"",used=Object.entries(state.services).filter(([id])=>id!==currentService).map(([,d])=>d),values=[];if(allowCurrent&&current)values.push(current);for(let i=1;i<=20;i++){const v="dik"+i;if(!used.includes(v)&&!values.includes(v))values.push(v)}return values}
+function refreshDikaderOptions(){const id=serviceInput.value.trim();dikaderSelect.innerHTML="";if(id&&state.services[id]){const o=document.createElement("option");o.value=state.services[id];o.textContent=state.services[id];dikaderSelect.appendChild(o);dikaderSelect.disabled=true;dikaderNote.textContent="Deze Service ID is vast gekoppeld aan "+state.services[id]+".";refreshNewDikaderOptions();return}getAvailableDikaders(false).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;dikaderSelect.appendChild(o)});dikaderSelect.disabled=false;dikaderNote.textContent="Na de eerste scan wordt deze dikader vast gekoppeld aan deze Service ID.";refreshNewDikaderOptions()}
+function refreshNewDikaderOptions(){updateNewPositionLayout();if(!canChangeDikaderAtNewPosition()){newDikaderBlock.classList.add("hidden");newDikaderSelect.value="";newDikaderNote.textContent="";return}newDikaderBlock.classList.remove("hidden");const old=newDikaderSelect.value;newDikaderSelect.innerHTML="";const e=document.createElement("option");e.value="";e.textContent="DIK";newDikaderSelect.appendChild(e);getAvailableDikaders(true).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;newDikaderSelect.appendChild(o)});if([...newDikaderSelect.options].some(o=>o.value===old))newDikaderSelect.value=old;newDikaderNote.textContent=""}
+function refreshLclMeasurementOptions(){const id=lclServiceSelect.value,old=lclMeasurementSelect.value;lclMeasurementSelect.innerHTML="";state.measurements.filter(m=>m.serviceId===id).forEach(m=>{const o=document.createElement("option");o.value=m.id;o.textContent=m.positionText;lclMeasurementSelect.appendChild(o)});if([...lclMeasurementSelect.options].some(o=>o.value===old))lclMeasurementSelect.value=old}
+function normalizeKey(v){return String(v||"").trim().toLowerCase().replace(/δ/g,"delta").replace(/Δ/g,"delta").replace(/\s+/g,"").replace(/_/g,"-")}
+function compactKey(v){return normalizeKey(v).replace(/[^a-z0-9]/g,"")}
+function cleanValue(v){return String(v||"-").replace(/- -/g,"-").replace(/MΩ/gi,"MOhm").replace(/mΩ/gi,"mOhm").replace(/Ω/g,"Ohm").replace(/pct/gi,"%").trim()}
+function numberFromValue(v){const m=String(v||"").replace(",",".").match(/-?\d+(\.\d+)?/);return m?Number(m[0]):null}
 function parseArgusText(raw){
-const result={length:"-",deltaAbs:"-",deltaRel:"-",isolation:["-","-","-"],capacity:["-","-","-"],dc:["-","-","-"],ac:["-","-","-"],raw:raw};
-const text=raw.replace(/\r/g,"\n").replace(/,/g,".");
-const lines=text.split(/\n+/).map(line=>line.trim()).filter(Boolean);
-lines.forEach(line=>{
-const parts=line.split(";").map(part=>part.trim()).filter(part=>part!=="");
-const key=(parts[0]||"").toLowerCase();
-if(key==="dc" && parts.length>=4) result.dc=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
-if(key==="ac" && parts.length>=4) result.ac=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
-if((key==="iso" || key==="riso") && parts.length>=4) result.isolation=[cleanValue(parts[1]),cleanValue(parts[2]),cleanValue(parts[3])];
-if((key==="l" || key==="length") && parts.length>=2) result.length=cleanValue(parts[1]);
-if((key==="cab" || key==="cm(ab)") && parts.length>=2) result.capacity[0]=cleanValue(parts[1]);
-if((key==="cag" || key==="ca-g") && parts.length>=2) result.capacity[1]=cleanValue(parts[1]);
-if((key==="cbg" || key==="cb-g") && parts.length>=2) result.capacity[2]=cleanValue(parts[1]);
-if((key==="deltac" || key==="deltacab(abs)") && parts.length>=2) result.deltaAbs=cleanValue(parts[1]);
-if((key==="deltac%" || key==="deltacab(rel)") && parts.length>=2) result.deltaRel=cleanValue(parts[1]);
-parts.forEach((part,index)=>{
-const low=part.toLowerCase();
-if(low==="cm(ab)" && parts[index+1]) result.capacity[0]=cleanValue(parts[index+1]);
-if(low==="ca-g" && parts[index+1]) result.capacity[1]=cleanValue(parts[index+1]);
-if(low==="cb-g" && parts[index+1]) result.capacity[2]=cleanValue(parts[index+1]);
-if(low==="deltacab(abs)" && parts[index+1]) result.deltaAbs=cleanValue(parts[index+1]);
-if(low==="deltacab(rel)" && parts[index+1]) result.deltaRel=cleanValue(parts[index+1]);
+const r={length:"-",deltaAbs:"-",deltaRel:"-",isolation:["-","-","-"],capacity:["-","-","-"],dc:["-","-","-"],ac:["-","-","-"],raw};
+String(raw||"").replace(/\r/g,"\n").replace(/,/g,".").split(/\n+/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+const p=line.split(";").map(x=>x.trim()).filter(x=>x!=="");
+const k=compactKey(p[0]||"");
+if(k==="dc"&&p.length>=4)r.dc=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if(k==="ac"&&p.length>=4)r.ac=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if((k==="iso"||k==="riso"||k==="isolatie")&&p.length>=4)r.isolation=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if(k==="cap"&&p.length>=4)r.capacity=[cleanValue(p[1]),cleanValue(p[2]),cleanValue(p[3])];
+if((k==="l"||k==="length"||k==="lengte")&&p.length>=2)r.length=cleanValue(p[1]);
+for(let i=0;i<p.length-1;i++){
+const key=compactKey(p[i]);
+const value=cleanValue(p[i+1]);
+if(["cmab","cab","cabnf"].includes(key))r.capacity[0]=value;
+if(["cag","cagnf","cmag"].includes(key))r.capacity[1]=value;
+if(["cbg","cbgnf","cmbg"].includes(key))r.capacity[2]=value;
+if(["deltacababs","deltacabs","deltacapabs"].includes(key))r.deltaAbs=value;
+if(["deltacabrel","deltacrel","deltacaprel"].includes(key))r.deltaRel=value;
+}
 });
-});
-return result;
+if((r.deltaAbs==="-"||r.deltaRel==="-")&&r.capacity[1]!=="-"&&r.capacity[2]!=="-"){
+const ag=numberFromValue(r.capacity[1]);
+const bg=numberFromValue(r.capacity[2]);
+if(ag!==null&&bg!==null){
+const abs=Math.abs(ag-bg);
+const avg=(Math.abs(ag)+Math.abs(bg))/2;
+r.deltaAbs=abs.toFixed(2)+" nF";
+r.deltaRel=avg>0?(abs/avg*100).toFixed(1)+"%":"-";
 }
-
-function cleanValue(value){
-return String(value||"-").replace(/MOhm/gi,"MΩ").replace(/mOhm/gi,"mΩ").replace(/pct/gi,"%").trim();
 }
-
-function validateBeforeScan(){
-const serviceId=getCurrentServiceId();
-const dikader=dikaderSelect.value;
-const position=positionSelect.value;
-const direction=directionSelect.value;
-if(!serviceId){alert("Vul eerst een Service ID in.");return false}
-if(!dikader){alert("Kies eerst een vrije dikader.");return false}
-if(!position){alert("Kies eerst een positie.");return false}
-if(!direction){alert("Kies eerst een richting.");return false}
-return true;
+return r;
 }
-
-function handleScannedArgusText(raw){
-const serviceId=getCurrentServiceId();
-const dikader=dikaderSelect.value;
-const position=positionSelect.value;
-const direction=directionSelect.value;
-if(!validateBeforeScan()) return;
-if(!raw){alert("Geen QR-data ontvangen.");return}
-if(!state.services[serviceId]){
-state.services[serviceId]={dikader:dikader};
-state.activeServiceId=serviceId;
-}
-saveCurrentNewPosition(false);
-state.measurements.push({serviceId:serviceId,dikader:state.services[serviceId].dikader,position:position,direction:direction,newPosition:state.newPositions[serviceId]||state.newPositions.__draft__||null,parsed:parseArgusText(raw)});
-if(state.newPositions.__draft__){
-state.newPositions[serviceId]=state.newPositions.__draft__;
-delete state.newPositions.__draft__;
-}
-serviceInput.value=serviceId;
-refreshAllSelects();
-refreshDocument();
-saveState();
-}
-
-function startArgusScan(){
-if(!validateBeforeScan()) return;
-if(typeof Html5Qrcode==="undefined"){
-alert("QR-scanner bibliotheek is niet geladen. Controleer internetverbinding of APK-build.");
+function normalizeLcl(v){const c=String(v||"").replace(",",".").replace("dBm","").trim();if(!c)return"";const n=Number(c);if(Number.isNaN(n))return"";return"-"+Math.abs(n).toFixed(1)+" dBm"}
+function validateBeforeScan(){if(!serviceInput.value.trim()){alert("Vul eerst een Service ID in.");return false}if(!dikaderSelect.value){alert("Kies eerst een vrije dikader.");return false}if(!positionSelect.value||!directionSelect.value){alert("Kies eerst locatie en richting.");return false}return true}
+function startScanner(){scannerTitle.textContent="Scan Argus QR-code";scannerModal.classList.add("open");if(activeScanner)stopScanner();activeScanner=new Html5Qrcode("reader");activeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},text=>{stopScanner();scannerModal.classList.remove("open");handleScannedArgusText(text)}).catch(()=>{scannerModal.classList.remove("open");alert("Camera kon niet worden geopend. Test via HTTPS, localhost of APK en geef cameratoegang.")})}
+function stopScanner(){if(!activeScanner)return;activeScanner.stop().then(()=>activeScanner.clear()).catch(()=>{}).finally(()=>activeScanner=null)}
+function handleScannedArgusText(raw){const id=serviceInput.value.trim();unmarkAutoServiceDraft(id);let dikader=state.services[id]||dikaderSelect.value;const activeInfo=cloneRouteInfo(ensureActiveServiceRouteInfo());state.serviceRouteInfo[id]=activeInfo;updateRouteTemplate(activeInfo);const isNew=hasNewPositionInput();const positionForMeasurement=isNew?newPositionSelect.value:positionSelect.value;if(isNew&&canChangeDikaderAtNewPosition()&&newDikaderSelect.value){dikader=newDikaderSelect.value;state.services[id]=dikader}else if(!state.services[id])state.services[id]=dikader;if(isNew)applyNewPositionChanges(id);state.routeInfoSelectedServiceId=id;const item={id:"m"+Date.now(),type:isNew?"newPosition":"normal",serviceId:id,dikader,position:positionForMeasurement,direction:directionSelect.value,positionText:buildPositionText(positionForMeasurement,directionSelect.value,dikader),newPositionValue:isNew?formatNewPositionValue():"",routeChanges:snapshotRouteChanges(id),parsed:parseArgusText(raw)};state.measurements.push(item);refreshServices();refreshDocument();saveState()}
+function saveNewPositionWithoutScan(){const id=serviceInput.value.trim();unmarkAutoServiceDraft(id);if(!id){alert("Vul eerst een Service ID in.");return}if(!state.services[id]&&!dikaderSelect.value){alert("Kies eerst een dikader.");return}if(!newPositionSelect.value){alert("Kies eerst een nieuwe positie.");return}if(!hasNewPositionInput()&&!(canChangeDikaderAtNewPosition()&&newDikaderSelect.value)){alert("Vul eerst een nieuwe positie in.");return}let dikader=state.services[id]||dikaderSelect.value;const activeInfo=cloneRouteInfo(ensureActiveServiceRouteInfo());state.serviceRouteInfo[id]=activeInfo;updateRouteTemplate(activeInfo);if(canChangeDikaderAtNewPosition()&&newDikaderSelect.value){dikader=newDikaderSelect.value;state.services[id]=dikader}else if(!state.services[id])state.services[id]=dikader;applyNewPositionChanges(id);state.routeInfoSelectedServiceId=id;refreshServices();refreshDocument();saveState()}
+function saveLcl(){const value=normalizeLcl(lclInput.value),mid=lclMeasurementSelect.value;if(!lclServiceSelect.value){alert("Kies eerst een Service ID.");return}if(!mid){alert("Kies eerst een positie/meting.");return}if(!value){alert("Vul eerst een LCL waarde in.");return}const id=lclServiceSelect.value;const dikader=state.services[id]||"";state.lcls.push({serviceId:id,measurementId:mid,routeLine:buildCompactRoute(id,dikader),value});lclInput.value="";refreshDocument();saveState()}
+function saveRouteRestored(){let ids=[...new Set(state.measurements.map(m=>m.serviceId).filter(Boolean))].filter(id=>!state.routeRestored[id]);const activeId=serviceInput.value.trim()||lclServiceSelect.value;if(activeId&&!ids.includes(activeId)&&!state.routeRestored[activeId])ids.push(activeId);if(!ids.length){if(!activeId){alert("Kies eerst een Service ID.");return}ids=[activeId]}ids.forEach(id=>{const dikader=state.services[id]||dikaderSelect.value||"";state.routeRestored[id]=buildRestoredRouteText(id,dikader)});refreshDocument();saveState()}
+function writeRouteChanges(lines,changes){const list=cleanRouteChangeList(changes);if(!list.length)return;const width=Math.max(...list.map(change=>change.position.length));list.forEach(change=>lines.push("Nieuwe pos : "+String(change.position).padEnd(width," ")+" "+change.value))}
+function displayPositionText(value){return String(value||"").replace(/\s+richting\s+/g," → ")}
+function writeMeasurement(lines,item,label){lines.push("");lines.push(label+" :");lines.push(displayPositionText(item.positionText));writeRouteChanges(lines,item.routeChanges);lines.push("Lengte : "+item.parsed.length+" | Δ C : "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");lines.push("Isolatie :");lines.push("AB "+item.parsed.isolation[0]+" | AG "+item.parsed.isolation[1]+" | BG "+item.parsed.isolation[2]);lines.push("Capaciteit :");lines.push("AB "+item.parsed.capacity[0]+" | AG "+item.parsed.capacity[1]+" | BG "+item.parsed.capacity[2]);lines.push("DC : AB "+item.parsed.dc[0]+" | AG "+item.parsed.dc[1]+" | BG "+item.parsed.dc[2]);lines.push("AC : AB "+item.parsed.ac[0]+" | AG "+item.parsed.ac[1]+" | BG "+item.parsed.ac[2])}
+function refreshDocument(){renderCurrentRoute();const lines=["KOPERMETINGEN",""];const ids=[...new Set([...state.measurements.map(m=>m.serviceId),...state.lcls.map(l=>l.serviceId),...Object.keys(state.routeRestored)])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));if(!ids.length){lines.push("Nog geen metingen toegevoegd.");documentOutput.value=lines.join("\n");counterInfo.textContent="0 metingen • 0 LCL";return}ids.forEach(id=>{const dikader=state.services[id]||"";const ms=state.measurements.filter(m=>m.serviceId===id);const ls=state.lcls.filter(l=>l.serviceId===id);if(!ms.length&&!ls.length&&!state.routeRestored[id])return;lines.push("------------------------------------------------------------");lines.push("SERVICE ID : "+id);buildRouteLines(id,dikader).forEach(line=>lines.push(line));ms.forEach((m,i)=>writeMeasurement(lines,m,"METING "+(i+1)));ls.forEach(l=>{lines.push("");lines.push("LCL :");lines.push("Route : "+(l.routeLine||buildCompactRoute(id,dikader)));lines.push("Waarde : "+l.value)});if(state.routeRestored[id]){lines.push("");lines.push("ROUTE HERSTELD :");String(state.routeRestored[id]).split("\n").forEach(line=>lines.push(line))}lines.push("")});documentOutput.value=lines.join("\n");counterInfo.textContent=state.measurements.length+" metingen • "+state.lcls.length+" LCL"}
+function copyDocument(){navigator.clipboard.writeText(documentOutput.value).then(()=>alert("Tekst gekopieerd."))}
+function createReportFileName(){const d=new Date();const pad=n=>String(n).padStart(2,"0");return "kopermeting_"+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"_"+pad(d.getHours())+pad(d.getMinutes())+".txt"}
+async function shareDocumentFile(){
+const text=documentOutput.value.trim();
+if(!text){
+alert("Er is nog geen tekstdocument om te versturen.");
 return;
 }
-scannerModal.classList.add("open");
-document.getElementById("reader").innerHTML="";
-activeScanner=new Html5Qrcode("reader");
-scannerBusy=false;
-activeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:280,height:280}},decodedText=>{
-if(scannerBusy) return;
-scannerBusy=true;
-stopScanner().then(()=>handleScannedArgusText(decodedText));
-},()=>{}).catch(()=>{
-alert("Camera openen is mislukt. Gebruik HTTPS, localhost of de Android APK.");
-closeScanner();
-});
-}
-
-function stopScanner(){
-return new Promise(resolve=>{
-if(!activeScanner){resolve();return}
-activeScanner.stop().then(()=>{
-activeScanner.clear();
-activeScanner=null;
-scannerModal.classList.remove("open");
-resolve();
-}).catch(()=>{
-activeScanner=null;
-scannerModal.classList.remove("open");
-resolve();
-});
-});
-}
-
-function closeScanner(){
-stopScanner();
-}
-
-function saveLcl(){
-const serviceId=lclServiceSelect.value;
-const position=lclPositionSelect.value;
-const value=lclInput.value.trim();
-if(!serviceId){alert("Er is nog geen Service ID beschikbaar. Scan eerst een Argus meting.");return}
-if(!value){alert("Vul eerst een LCL waarde in.");return}
-state.lcls[serviceId]={value:value+" dBm",position:position};
-lclInput.value="";
-refreshDocument();
-saveState();
-}
-
-function buildRouteLines(){
-const lines=[];
-const hvdName=hvdInput.value.trim().toUpperCase();
-if(hvdName) lines.push("HVD "+hvdName);
-state.kvds.forEach(name=>{
-const cleanName=name.trim().toUpperCase();
-if(cleanName) lines.push("KVD "+cleanName);
-});
-lines.push("ISRA");
-return lines;
-}
-
-function formatRegistration(reg){
-if(!reg) return "";
-const parts=[];
-if(reg.row) parts.push("Rij "+reg.row);
-if(reg.style) parts.push("Stijl "+reg.style);
-if(reg.pin) parts.push("Stift "+reg.pin);
-return parts.join(" / ");
-}
-
-function refreshDocument(){
-const lines=[];
-const routeLines=buildRouteLines();
-lines.push("KOPERMETINGEN");
-lines.push("");
-lines.push("ROUTE");
-lines.push("-----");
-routeLines.forEach(line=>lines.push(line));
-lines.push("");
-const serviceIds=Object.keys(state.services);
-if(serviceIds.length===0){
-lines.push("Nog geen metingen toegevoegd.");
-documentOutput.value=lines.join("\n");
-counterInfo.textContent="0 metingen • 0 LCL";
+try{
+const plugins=window.Capacitor&&window.Capacitor.Plugins?window.Capacitor.Plugins:null;
+const Filesystem=plugins&&plugins.Filesystem?plugins.Filesystem:null;
+const Share=plugins&&plugins.Share?plugins.Share:null;
+const fileName=createReportFileName();
+if(Filesystem&&Share&&typeof Filesystem.writeFile==="function"&&typeof Filesystem.getUri==="function"&&typeof Share.share==="function"){
+await Filesystem.writeFile({path:fileName,data:text,directory:"CACHE",encoding:"utf8"});
+const file=await Filesystem.getUri({directory:"CACHE",path:fileName});
+await Share.share({title:"Kopermetingen",text:"Kopermeting rapport",files:[file.uri],dialogTitle:"Verstuur via Bluetooth"});
 return;
 }
-let measurementNumber=1;
-serviceIds.forEach(serviceId=>{
-const service=state.services[serviceId];
-const measurements=state.measurements.filter(item=>item.serviceId===serviceId);
-const lcl=state.lcls[serviceId];
-const newPosition=state.newPositions[serviceId];
-if(measurements.length===0 && !lcl && !newPosition) return;
-lines.push("------------------------------------------------------------");
-lines.push("SERVICE ID : "+serviceId);
-lines.push("DIKADER    : "+service.dikader);
-if(lcl){
-lines.push("LCL        : "+lcl.value);
-lines.push("LCL POS    : "+lcl.position);
-}
-if(newPosition && (newPosition.row || newPosition.style || newPosition.pin)){
-lines.push("NIEUWE POS : "+newPosition.position);
-lines.push("REGISTRATIE: "+formatRegistration(newPosition));
-}
-measurements.forEach(item=>{
-lines.push("------------------------------------------------------------");
-lines.push("METING "+measurementNumber+" :");
-lines.push(item.position+" → "+item.direction+" | "+item.dikader);
-lines.push("");
-lines.push("Lengte     : "+item.parsed.length);
-lines.push("ΔC         : "+item.parsed.deltaAbs+" ("+item.parsed.deltaRel+")");
-lines.push("");
-lines.push("Isolatie");
-lines.push("a-b "+item.parsed.isolation[0]);
-lines.push("a-G "+item.parsed.isolation[1]);
-lines.push("b-G "+item.parsed.isolation[2]);
-lines.push("");
-lines.push("Capaciteit");
-lines.push("a-b "+item.parsed.capacity[0]);
-lines.push("a-G "+item.parsed.capacity[1]);
-lines.push("b-G "+item.parsed.capacity[2]);
-lines.push("");
-lines.push("DC");
-lines.push("a-b "+item.parsed.dc[0]);
-lines.push("a-G "+item.parsed.dc[1]);
-lines.push("b-G "+item.parsed.dc[2]);
-lines.push("");
-lines.push("AC");
-lines.push("a-b "+item.parsed.ac[0]);
-lines.push("a-G "+item.parsed.ac[1]);
-lines.push("b-G "+item.parsed.ac[2]);
-lines.push("");
-lines.push("Ruwe data");
-lines.push(item.parsed.raw);
-lines.push("");
-measurementNumber++;
-});
-lines.push("");
-});
-documentOutput.value=lines.join("\n");
-counterInfo.textContent=state.measurements.length+" metingen • "+Object.keys(state.lcls).length+" LCL";
-}
-
-function copyDocument(){
-navigator.clipboard.writeText(documentOutput.value).then(()=>alert("Tekst gekopieerd.")).catch(()=>{
-documentOutput.select();
-document.execCommand("copy");
-alert("Tekst gekopieerd.");
-});
-}
-
-function makeQrCode(){
-if(typeof QRCode==="undefined"){
-alert("QR-code bibliotheek is niet geladen.");
+if(Share&&typeof Share.share==="function"){
+await Share.share({title:"Kopermetingen",text:text,dialogTitle:"Verstuur via Bluetooth"});
 return;
 }
-qrOutput.innerHTML="";
-QRCode.toCanvas(documentOutput.value,{width:360,margin:2},(error,canvas)=>{
-if(error){alert("QR-code maken is mislukt.");return}
-qrOutput.appendChild(canvas);
-qrModal.classList.add("open");
-});
+if(navigator.share){
+await navigator.share({title:"Kopermetingen",text:text});
+return;
 }
-
-function showConfirm(title,text,action){
-confirmTitle.textContent=title;
-confirmText.textContent=text;
-confirmModal.classList.add("open");
-acceptConfirmButton.onclick=()=>{
-action();
-confirmModal.classList.remove("open");
-};
+await navigator.clipboard.writeText(text);
+alert("Delen is niet beschikbaar. De tekst is gekopieerd.");
+}catch(e){
+const message=String(e&&e.message?e.message:"").toLowerCase();
+if(!message.includes("cancel")){
+alert("Versturen is mislukt of geannuleerd.");
 }
-
-function clearDocument(){
-state.measurements=[];
-state.lcls={};
-refreshAllSelects();
-refreshDocument();
-saveState();
 }
-
-function clearAll(){
-state.hvd="";
-state.kvds=[];
-state.routeInfo=defaultRouteInfo();
-state.activeServiceId="";
-state.services={};
-state.measurements=[];
-state.lcls={};
-state.newPositions={};
-hvdInput.value="";
-serviceInput.value="";
-lclInput.value="";
-newRowInput.value="";
-newStyleInput.value="";
-newPinInput.value="";
-normalizeState();
-renderKvds();
-renderRouteInfo();
-refreshAllSelects();
-refreshDocument();
-saveState();
 }
+function showConfirm(t,txt,fn){confirmTitle.textContent=t;confirmText.textContent=txt;confirmModal.classList.add("open");acceptConfirmButton.onclick=()=>{fn();confirmModal.classList.remove("open")}}
+function clearDocument(){state.measurements=[];state.lcls=[];state.routeChanges={};state.routeRestored={};refreshServices();refreshDocument();saveState()}
+function clearAll(){autoServiceDraftId="";state.hvd="";state.kvds=[];state.routeVisible=true;state.routeInfoVisible=false;state.routeInfoSelectedServiceId="";state.currentRouteVisible=true;state.measurementVisible=true;state.newPositionVisible=true;state.lclVisible=true;state.routeInfo=emptyRouteInfo();state.serviceRouteInfo={};state.lastRouteInfoTemplate=emptyRouteInfo();state.services={};state.serviceDrafts=[];state.measurements=[];state.lcls=[];state.routeChanges={};state.routeRestored={};hvdInput.value="";serviceInput.value="";lclInput.value="";clearNewPosition();renderKvds();renderRouteInfo();refreshRouteOptions();refreshServices();refreshDocument();saveState()}
 
-function newMeasurement(){
-serviceInput.focus();
-showServiceSuggestions();
-}
+function serviceIdExists(id){return Object.prototype.hasOwnProperty.call(state.services,id)}
+function serviceDraftList(){if(!Array.isArray(state.serviceDrafts))state.serviceDrafts=[];return state.serviceDrafts}
+function serviceIdHasData(id){return Boolean(state.services[id]||state.measurements.some(m=>m.serviceId===id)||state.lcls.some(l=>l.serviceId===id)||state.routeRestored[id]||((state.routeChanges[id]||[]).length))}
+function markAutoServiceDraft(id){const clean=String(id||"").trim();if(!clean)return;const list=serviceDraftList();if(!list.includes(clean))list.push(clean);autoServiceDraftId=clean}
+function unmarkAutoServiceDraft(id){const clean=String(id||"").trim();state.serviceDrafts=serviceDraftList().filter(x=>x!==clean);if(autoServiceDraftId===clean)autoServiceDraftId=""}
+function deleteServiceIdRecord(clean){delete state.services[clean];delete state.serviceRouteInfo[clean];delete state.routeChanges[clean];delete state.routeRestored[clean];state.serviceDrafts=serviceDraftList().filter(x=>x!==clean);if(state.routeInfoSelectedServiceId===clean)state.routeInfoSelectedServiceId="";if(serviceInput.value.trim()===clean)serviceInput.value="";if(lclServiceSelect.value===clean)lclServiceSelect.value="";if(autoServiceDraftId===clean)autoServiceDraftId=""}
+function ensureStoredServiceId(id){const clean=String(id||"").trim();if(!clean)return"";if(!serviceIdExists(clean))state.services[clean]="";if(!state.serviceRouteInfo[clean])state.serviceRouteInfo[clean]=cloneRouteInfoForNewService();return clean}
+function removeStoredServiceId(id){const clean=String(id||"").trim();if(!clean)return;deleteServiceIdRecord(clean);renderServiceClear();refreshServices();renderRouteInfo();prefillNewPositionFromService(true);refreshDocument();saveState()}
+function removeAutoServiceDraft(nextId){const keep=String(nextId||"").trim();serviceDraftList().slice().forEach(id=>{if(id!==keep&&serviceIdExists(id)&&!serviceIdHasData(id))deleteServiceIdRecord(id)});if(!keep)autoServiceDraftId="";else autoServiceDraftId=serviceDraftList().includes(keep)?keep:""}
+function storeServiceIdFromMeasurement(){const id=activeServiceId();removeAutoServiceDraft(id);if(!id){refreshServices();renderRouteInfo();refreshDocument();saveState();return}const existed=serviceIdExists(id);ensureStoredServiceId(id);if(!existed)markAutoServiceDraft(id);if(!state.routeInfoSelectedServiceId)state.routeInfoSelectedServiceId=id;refreshServices();renderRouteInfo();refreshDocument();saveState()}
+function renderServiceIdsList(){if(!serviceIdsList)return;serviceIdsList.innerHTML="";sortedServiceIds().forEach(id=>{const row=document.createElement("div");row.className="service-id-item";const name=document.createElement("div");name.textContent=id;const remove=document.createElement("button");remove.className="service-id-remove";remove.type="button";remove.textContent="×";remove.addEventListener("click",()=>removeStoredServiceId(id));row.appendChild(name);row.appendChild(remove);serviceIdsList.appendChild(row)})}
+function addServiceIdFromInput(){const id=String(newServiceIdInput.value||"").trim();if(!id){alert("Vul eerst een Service ID in.");return}ensureStoredServiceId(id);unmarkAutoServiceDraft(id);newServiceIdInput.value="";if(!state.routeInfoSelectedServiceId)state.routeInfoSelectedServiceId=id;refreshServices();renderRouteInfo();refreshDocument();saveState()}
+function routeInfoServiceLabel(id){return id?String(id||""):""}
+function routeInfoSelectedId(){const ids=sortedServiceIds();if(state.routeInfoSelectedServiceId&&ids.includes(state.routeInfoSelectedServiceId))return state.routeInfoSelectedServiceId;const active=activeServiceId();if(active&&ids.includes(active))return active;return""}
+function routeInfoEditableInfo(){const id=routeInfoSelectedId();if(id){state.routeInfoSelectedServiceId=id;if(!state.serviceRouteInfo[id])state.serviceRouteInfo[id]=cloneRouteInfoForNewService();return normalizeRouteInfo(state.serviceRouteInfo[id])}return normalizeRouteInfo(state.routeInfo)}
+function renderRouteInfoServiceSelect(){const ids=sortedServiceIds();routeInfoServiceSelect.innerHTML="";if(!state.routeInfoVisible){routeInfoServiceSelect.classList.add("hidden");return}const first=document.createElement("option");first.value="";first.textContent="Service ID";routeInfoServiceSelect.appendChild(first);ids.forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=routeInfoServiceLabel(id);routeInfoServiceSelect.appendChild(o)});routeInfoServiceSelect.value=routeInfoSelectedId();routeInfoServiceSelect.classList.toggle("hidden",!ids.length)}
+function getAvailableDikadersForService(serviceId,allowCurrent){const id=String(serviceId||"").trim(),current=state.services[id]||"",used=Object.entries(state.services).filter(([sid,d])=>sid!==id&&d).map(([,d])=>d),values=[];if(allowCurrent&&current)values.push(current);for(let i=1;i<=20;i++){const v="dik"+i;if(!used.includes(v)&&!values.includes(v))values.push(v)}return values}
+function getAvailableDikaders(allowCurrent){return getAvailableDikadersForService(serviceInput.value.trim(),allowCurrent)}
+function renderRouteInfoDikaderSelect(serviceId){const last=lastRouteItemBeforeIsra();if(!last)return;const block=document.createElement("div");block.className="route-info-block";const title=document.createElement("div");title.className="route-info-title";title.textContent=last+" dikader";const select=document.createElement("select");const empty=document.createElement("option");empty.value="";empty.textContent="DIK";select.appendChild(empty);getAvailableDikadersForService(serviceId,true).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;select.appendChild(o)});select.value=state.services[serviceId]||"";select.addEventListener("change",()=>{state.services[serviceId]=select.value;refreshServices();renderRouteInfo();refreshDocument();saveState()});block.appendChild(title);block.appendChild(select);routeInfoPanel.appendChild(block)}
+function renderRouteInfo(){routeInfoPanel.style.display=state.routeInfoVisible?"block":"none";toggleRouteInfoButton.textContent=state.routeInfoVisible?"−":"+";routeInfoPanel.closest(".card").classList.toggle("collapsed-card",!state.routeInfoVisible);renderRouteInfoServiceSelect();routeInfoPanel.innerHTML="";if(!state.routeInfoVisible)return;const selectedId=routeInfoSelectedId();if(!selectedId){const note=document.createElement("div");note.className="note";note.textContent="Selecteer eerst een Service ID.";routeInfoPanel.appendChild(note);return}const info=routeInfoEditableInfo();if(hvdInput.value.trim()){const b=document.createElement("div");b.className="route-info-block";const hvdName="HVD "+hvdInput.value.trim().toUpperCase();b.innerHTML=`<div class="route-info-title">${escapeHtml(hvdName)}</div><div class="route-info-line-three"><div class="route-info-axis">H</div><div class="route-info-column">Rij</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hRij)}" placeholder="000" data-route-info="hvd" data-key="hRij"><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hStijl)}" placeholder="000" data-route-info="hvd" data-key="hStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.hStift)}" placeholder="000" data-route-info="hvd" data-key="hStift"></div><div class="route-info-line-three"><div class="route-info-axis">V</div><div class="route-info-column">Rij</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vRij)}" placeholder="000" data-route-info="hvd" data-key="vRij"><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vStijl)}" placeholder="000" data-route-info="hvd" data-key="vStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(info.hvd.vStift)}" placeholder="000" data-route-info="hvd" data-key="vStift"></div>`;routeInfoPanel.appendChild(b)}state.kvds.forEach((name,index)=>{const cleanName=String(name||"").trim().toUpperCase();if(!cleanName)return;if(!info.kvds[index])info.kvds[index]=emptyVInfo();const item=info.kvds[index],showSip=kvdNeedsSip(index);const b=document.createElement("div");b.className="route-info-block";b.innerHTML=`<div class="route-info-title">KVD ${cleanName}</div>${showSip?`<div class="route-info-line-two"><div class="route-info-axis">SIP</div><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(item.sipStijl)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(item.sipStift)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="sipStift"></div>`:""}<div class="route-info-line-two"><div class="route-info-axis">V</div><div class="route-info-column">Stijl</div><input maxlength="3" autocomplete="off" value="${escapeHtml(item.vStijl)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="vStijl"><div class="route-info-column">Stift</div><input inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" value="${escapeHtml(item.vStift)}" placeholder="000" data-route-info="kvd" data-index="${index}" data-key="vStift"></div>`;routeInfoPanel.appendChild(b)});renderRouteInfoDikaderSelect(selectedId);routeInfoPanel.querySelectorAll("[data-route-info]").forEach(input=>input.addEventListener("input",()=>{normalizeRegistrationInput(input);setRouteInfoValue(input.getAttribute("data-route-info"),Number(input.getAttribute("data-index")||0),input.getAttribute("data-key"),input.value)}))}
+function renderSectionVisibility(){if(typeof state.serviceIdsVisible!=="boolean")state.serviceIdsVisible=true;routePanel.style.display=state.routeVisible?"block":"none";toggleRouteButton.textContent=state.routeVisible?"−":"+";routePanel.closest(".card").classList.toggle("collapsed-card",!state.routeVisible);serviceIdsPanel.style.display=state.serviceIdsVisible?"block":"none";toggleServiceIdsButton.textContent=state.serviceIdsVisible?"−":"+";serviceIdsPanel.closest(".card").classList.toggle("collapsed-card",!state.serviceIdsVisible);currentRoutePanel.style.display=state.currentRouteVisible?"block":"none";toggleCurrentRouteButton.textContent=state.currentRouteVisible?"−":"+";currentRoutePanel.closest(".card").classList.toggle("collapsed-card",!state.currentRouteVisible);measurementPanel.style.display=state.measurementVisible?"block":"none";toggleMeasurementButton.textContent=state.measurementVisible?"−":"+";newPositionPanel.style.display=state.newPositionVisible?"block":"none";toggleNewPositionButton.textContent=state.newPositionVisible?"−":"+";newPositionPanel.closest(".card").classList.toggle("collapsed-card",!state.newPositionVisible);lclPanel.style.display=state.lclVisible?"block":"none";toggleLclButton.textContent=state.lclVisible?"−":"+";lclPanel.closest(".card").classList.toggle("collapsed-card",!state.lclVisible)}
+function refreshServices(){renderServiceDropdown();renderServiceIdsList();const old=lclServiceSelect.value;lclServiceSelect.innerHTML="";Object.keys(state.services).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"})).forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent=id;lclServiceSelect.appendChild(o)});if([...lclServiceSelect.options].some(o=>o.value===old))lclServiceSelect.value=old;renderRouteInfoServiceSelect();refreshDikaderOptions();refreshNewDikaderOptions();refreshLclMeasurementOptions()}
+function setLocationToFirstRouteItem(){const first=getRouteItemsForNewPosition()[0]||"";if(first&&[...positionSelect.options].some(o=>o.value===first)){positionSelect.value=first;refreshDirectionOptions()}}
+function clearAll(){autoServiceDraftId="";state.hvd="";state.kvds=[];state.routeVisible=true;state.serviceIdsVisible=true;state.routeInfoVisible=false;state.routeInfoSelectedServiceId="";state.currentRouteVisible=true;state.measurementVisible=true;state.newPositionVisible=true;state.lclVisible=true;state.routeInfo=emptyRouteInfo();state.serviceRouteInfo={};state.lastRouteInfoTemplate=emptyRouteInfo();state.services={};state.serviceDrafts=[];state.measurements=[];state.lcls=[];state.routeChanges={};state.routeRestored={};hvdInput.value="";serviceInput.value="";lclInput.value="";clearNewPosition();renderKvds();renderServiceIdsList();renderRouteInfo();refreshRouteOptions();refreshServices();refreshDocument();saveState()}
+function escapeHtml(v){return String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))}
+document.getElementById("settingsButton").onclick=()=>settingsPanel.classList.toggle("open");
+document.getElementById("helpButton").onclick=()=>alert(`REGELS KOPERMETING
 
-function escapeHtml(value){
-return String(value||"").replace(/[&<>"']/g,character=>{
-return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[character];
-});
-}
+Capaciteit
+Mag niet meer dan 3% of circa 2 nF afwijken tussen A-G en B-G.
 
-document.getElementById("settingsButton").addEventListener("click",()=>settingsPanel.classList.toggle("open"));
-document.getElementById("helpButton").addEventListener("click",()=>{
-alert("Werkvolgorde: route invullen, route info invullen indien nodig, Service ID kiezen of nieuw invoeren, dikader kiezen, positie en richting kiezen, daarna Argus QR-code scannen.");
-});
-document.getElementById("darkModeButton").addEventListener("click",()=>setTheme("dark"));
-document.getElementById("lightModeButton").addEventListener("click",()=>setTheme("light"));
-document.getElementById("pageHorizontalButton").addEventListener("click",()=>setPageLayout("horizontal"));
-document.getElementById("pageVerticalButton").addEventListener("click",()=>setPageLayout("vertical"));
-document.getElementById("clearDocumentButton").addEventListener("click",()=>{
-showConfirm("Document legen","Dit verwijdert alle metingen en LCL-metingen. Route, Route info, Service ID's en dikader-koppelingen blijven behouden.",clearDocument);
-});
-document.getElementById("clearAllButton").addEventListener("click",()=>{
-showConfirm("Alles legen","Dit verwijdert route, route info, Service ID's, dikader-koppelingen, metingen, LCL-metingen en het tekstdocument.",clearAll);
-});
-document.getElementById("cancelConfirmButton").addEventListener("click",()=>confirmModal.classList.remove("open"));
-document.getElementById("scanButton").addEventListener("click",startArgusScan);
-document.getElementById("closeScannerButton").addEventListener("click",closeScanner);
-document.getElementById("saveLclButton").addEventListener("click",saveLcl);
-document.getElementById("newMeasurementButton").addEventListener("click",newMeasurement);
-document.getElementById("copyButton").addEventListener("click",copyDocument);
-document.getElementById("qrButton").addEventListener("click",makeQrCode);
-document.getElementById("closeQrButton").addEventListener("click",()=>qrModal.classList.remove("open"));
-addFirstKvdButton.addEventListener("click",addKvd);
+Isolatieweerstand
+A-B, A-G en B-G moeten hoger zijn dan 3 MOhm en stabiel zijn.
 
-toggleRouteInfoButton.addEventListener("click",()=>{
-state.routeInfoVisible=!state.routeInfoVisible;
-renderRouteInfo();
-saveState();
-});
+Langsweerstand
+Maximaal 5 Ohm en maximaal 3% verschil.
 
-hvdInput.addEventListener("input",()=>{
-state.hvd=hvdInput.value.trim().toUpperCase();
-renderRouteInfo();
-refreshAllSelects();
-refreshDocument();
-saveState();
-});
+Vreemde spanning
+Maximaal 3 V DC of 0,25 V AC.
 
-serviceInput.addEventListener("focus",showServiceSuggestions);
-serviceInput.addEventListener("click",showServiceSuggestions);
-serviceInput.addEventListener("input",()=>{
-const id=getCurrentServiceId();
-state.activeServiceId=state.services[id]?id:"";
-showServiceSuggestions();
-refreshDikaderOptions();
-autoFillNewPositionFromSelection(false);
-refreshActiveServiceRouteInfo();
-saveState();
-});
-document.addEventListener("click",event=>{
-if(!event.target.closest(".service-wrapper")) hideServiceSuggestions();
-});
+Symmetrie
+Geldt voor zowel capaciteit als langsweerstand.
 
-positionSelect.addEventListener("change",()=>{
-refreshDirectionOptions();
-autoFillNewPositionFromSelection(false);
-});
-directionSelect.addEventListener("change",saveState);
-newPositionSelect.addEventListener("change",()=>autoFillNewPositionFromSelection(true));
-[newRowInput,newStyleInput,newPinInput].forEach(input=>{
-input.addEventListener("input",()=>{
-input.value=numericOnly(input.value);
-saveCurrentNewPosition();
-});
-});
-document.getElementById("clearNewPositionButton").addEventListener("click",clearCurrentNewPosition);
-lclServiceSelect.addEventListener("change",refreshLclInfo);
-attachNumericFilters(document);
+Lengte
+Van beide kanten meten. Verschil maximaal 1%.
 
-loadState();
-hvdInput.value=state.hvd||"";
-serviceInput.value=state.activeServiceId||"";
-renderKvds();
-renderRouteInfo();
-refreshAllSelects();
-setTheme(state.theme);
-setPageLayout(state.pageLayout);
-refreshDocument();
+WERKVOLGORDE
+
+1. HVD invullen indien aanwezig.
+2. KVD toevoegen indien aanwezig.
+3. Route info toevoegen indien nodig.
+4. Service ID kiezen of invoeren.
+5. Dikader kiezen.
+6. Positie en richting kiezen.
+7. Argus QR-code scannen.
+8. Eventueel Nieuwe positie gebruiken bij slechte ader.
+9. Eventueel LCL toevoegen.
+10. Eventueel Route hersteld vastleggen.
+11. Tekstdocument controleren.
+12. Tekst kopiëren of versturen via Bluetooth.`);
+document.getElementById("darkModeButton").onclick=()=>setTheme("dark");
+document.getElementById("lightModeButton").onclick=()=>setTheme("light");
+document.getElementById("pageHorizontalButton").onclick=()=>setPageLayout("horizontal");
+document.getElementById("pageVerticalButton").onclick=()=>setPageLayout("vertical");
+document.getElementById("clearDocumentButton").onclick=()=>showConfirm("Document legen","Dit verwijdert metingen, LCL, nieuwe posities en route hersteld. Route en koppelingen blijven staan.",clearDocument);
+document.getElementById("clearAllButton").onclick=()=>showConfirm("Alles legen","Dit verwijdert alles.",clearAll);
+document.getElementById("cancelConfirmButton").onclick=()=>confirmModal.classList.remove("open");
+document.getElementById("scanButton").onclick=()=>{if(validateBeforeScan())startScanner()};
+document.getElementById("cancelScannerButton").onclick=()=>{stopScanner();scannerModal.classList.remove("open")};
+document.getElementById("addKvdButton").onclick=addKvd;
+document.getElementById("toggleRouteButton").onclick=()=>{state.routeVisible=!state.routeVisible;renderSectionVisibility();saveState()};
+toggleServiceIdsButton.onclick=()=>{state.serviceIdsVisible=!state.serviceIdsVisible;renderSectionVisibility();saveState()};
+addServiceIdButton.onclick=addServiceIdFromInput;
+newServiceIdInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addServiceIdFromInput()}});
+document.getElementById("toggleRouteInfoButton").onclick=()=>{state.routeInfoVisible=!state.routeInfoVisible;renderRouteInfo();saveState()};
+document.getElementById("toggleCurrentRouteButton").onclick=()=>{state.currentRouteVisible=!state.currentRouteVisible;renderSectionVisibility();saveState()};
+routeInfoServiceSelect.addEventListener("change",()=>{state.routeInfoSelectedServiceId=routeInfoServiceSelect.value;routeInfoEditableInfo();renderRouteInfo();prefillNewPositionFromService(false);saveState()});
+document.getElementById("toggleMeasurementButton").onclick=()=>{state.measurementVisible=!state.measurementVisible;renderSectionVisibility();saveState()};
+document.getElementById("toggleNewPositionButton").onclick=()=>{state.newPositionVisible=!state.newPositionVisible;renderSectionVisibility();saveState()};
+document.getElementById("toggleLclButton").onclick=()=>{state.lclVisible=!state.lclVisible;renderSectionVisibility();saveState()};
+document.getElementById("saveLclButton").onclick=saveLcl;
+document.getElementById("routeRestoredButton").onclick=saveRouteRestored;
+document.getElementById("newMeasurementButton").onclick=()=>serviceInput.focus();
+document.getElementById("copyButton").onclick=copyDocument;
+document.getElementById("bluetoothButton").onclick=shareDocumentFile;
+document.getElementById("saveNewPositionButton").onclick=saveNewPositionWithoutScan;
+document.getElementById("clearNewPositionButton").onclick=clearNewPosition;
+hvdInput.addEventListener("input",()=>{state.hvd=hvdInput.value.trim().toUpperCase();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});
+positionSelect.addEventListener("change",()=>refreshDirectionOptions());
+serviceInput.addEventListener("focus",()=>{renderServiceClear();if(activeServiceId())ensureActiveServiceRouteInfo();renderServiceDropdown();renderRouteInfo()});
+serviceInput.addEventListener("input",handleServiceInputChange);
+serviceInput.addEventListener("change",storeServiceIdFromMeasurement);
+serviceInput.addEventListener("blur",storeServiceIdFromMeasurement);
+serviceClearButton.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();clearServiceInput();serviceInput.focus()});
+document.addEventListener("click",e=>{if(!e.target.closest(".service-combo"))hideServiceDropdown()});
+newPositionInputs().forEach(input=>input.addEventListener("input",()=>{normalizeRegistrationInput(input);newPositionDirty=true;saveState()}));
+newPositionSelect.addEventListener("change",()=>{updateNewPositionLayout();refreshNewDikaderOptions();prefillNewPositionFromService(true);saveState()});
+newDikaderSelect.addEventListener("change",saveState);
+lclServiceSelect.addEventListener("change",refreshLclMeasurementOptions);
+loadState();hvdInput.value=state.hvd||"";renderServiceClear();renderKvds();renderServiceIdsList();renderSectionVisibility();renderRouteInfo();refreshRouteOptions();setLocationToFirstRouteItem();refreshServices();setTheme(state.theme);setPageLayout(state.pageLayout);updateNewPositionLayout();prefillNewPositionFromService(true);refreshDocument();
 </script>
 </body>
 </html>
