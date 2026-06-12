@@ -22,9 +22,10 @@ h1{margin:0;font-size:30px;letter-spacing:.5px;line-height:1.1}
 .settings-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);color:var(--accent);font-weight:bold}
 .setting-row{display:flex;justify-content:space-between;padding:10px;border-radius:8px;cursor:pointer}
 .setting-row:hover{background:var(--panel2)}
+.setting-row span:last-child{color:var(--accent)}
 .layout{display:grid;gap:14px}
-body.page-layout-horizontal .layout{grid-template-columns:430px 1fr}
-body.page-layout-vertical .layout{grid-template-columns:1fr}
+body.page-layout-horizontal .layout{grid-template-columns:1fr}
+body.page-layout-vertical .layout{grid-template-columns:430px 1fr}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
 h2{margin:0 0 14px 0;color:var(--accent);font-size:20px}
 h3{margin:18px 0 8px 0;color:var(--accent);font-size:18px}
@@ -35,6 +36,7 @@ input:disabled,select:disabled{opacity:.75}
 textarea{resize:vertical;font-family:"Courier New",monospace}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .kvd-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 .kvd-chip{display:grid;grid-template-columns:auto 44px 36px;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:7px}
 .kvd-label{font-weight:bold;color:var(--text);white-space:nowrap}
@@ -57,7 +59,7 @@ button{border:0;border-radius:8px;padding:13px 14px;font-size:16px;font-weight:b
 .hidden-note{display:none}
 .divider{height:1px;background:var(--border);margin:18px 0}
 .document-card{height:calc(100vh - 110px);display:flex;flex-direction:column}
-body.page-layout-vertical .document-card{height:auto}
+body.page-layout-horizontal .document-card{height:auto}
 .document-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
 .document-header h2{margin:0}
 .document{flex:1;min-height:520px;white-space:pre;overflow:auto;resize:none;font-size:15px;line-height:1.45}
@@ -70,17 +72,18 @@ body.page-layout-vertical .document-card{height:auto}
 .qr-box{background:#fff;color:#000;border-radius:10px;padding:20px;text-align:center;overflow-wrap:anywhere}
 #reader{width:100%}
 @media(max-width:900px){
-body.page-layout-horizontal .layout{grid-template-columns:1fr}
+body.page-layout-vertical .layout{grid-template-columns:1fr}
 .document-card{height:auto}
 .document{min-height:520px}
-.actions,.grid,.grid-three{grid-template-columns:1fr}
+.actions{grid-template-columns:1fr}
+.grid{grid-template-columns:1fr}
 .kvd-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 .settings{width:300px}
 h1{font-size:26px}
 }
 </style>
 </head>
-<body class="dark page-layout-vertical">
+<body class="dark page-layout-horizontal">
 <div class="app">
 <div class="header">
 <h1>KOPERMETINGEN</h1>
@@ -92,8 +95,8 @@ h1{font-size:26px}
 <div class="setting-row" id="darkModeButton"><span>Dark Side</span><span id="darkCheck">✓</span></div>
 <div class="setting-row" id="lightModeButton"><span>Light Side</span><span id="lightCheck"></span></div>
 <div class="settings-section">Pagina-layout</div>
-<div class="setting-row" id="pageVerticalButton"><span>Verticaal</span><span id="pageVerticalCheck">✓</span></div>
-<div class="setting-row" id="pageHorizontalButton"><span>Horizontaal</span><span id="pageHorizontalCheck"></span></div>
+<div class="setting-row" id="pageHorizontalButton"><span>Horizontaal</span><span id="pageHorizontalCheck">✓</span></div>
+<div class="setting-row" id="pageVerticalButton"><span>Verticaal</span><span id="pageVerticalCheck"></span></div>
 <div class="settings-section">Verwijderen</div>
 <div class="setting-row" id="clearDocumentButton"><span>Document legen</span><span></span></div>
 <div class="setting-row" id="clearAllButton"><span>Alles legen</span><span></span></div>
@@ -106,7 +109,7 @@ h1{font-size:26px}
 <div class="card">
 <h2>ROUTE</h2>
 <label>HVD</label>
-<input id="hvdInput" type="text" placeholder="Bijvoorbeeld HOOFD">
+<input id="hvdInput" type="text">
 <div id="kvdContainer" class="kvd-list"></div>
 <div id="addFirstKvdBox">
 <button class="secondary full" id="addFirstKvdButton" type="button">+ KVD toevoegen</button>
@@ -130,9 +133,11 @@ h1{font-size:26px}
 <input id="serviceInput" type="text" placeholder="Kies of voer Service ID in" autocomplete="off">
 <div id="serviceSuggestions" class="service-suggestions"></div>
 </div>
+
 <label>Dikader</label>
 <select id="dikaderSelect"></select>
 <div id="dikaderNote" class="note hidden-note"></div>
+
 <div class="grid">
 <div>
 <label>Positie</label>
@@ -143,6 +148,7 @@ h1{font-size:26px}
 <select id="directionSelect"></select>
 </div>
 </div>
+
 <button class="primary full" id="scanButton">Scan Argus QR-code</button>
 </div>
 
@@ -228,7 +234,7 @@ h1{font-size:26px}
 <script>
 const state={
 theme:"dark",
-pageLayout:"vertical",
+pageLayout:"horizontal",
 routeInfoVisible:true,
 hvd:"",
 kvds:[],
@@ -303,18 +309,19 @@ if(!Array.isArray(state.measurements)) state.measurements=[];
 if(!state.lcls || typeof state.lcls!=="object") state.lcls={};
 if(!state.newPositions || typeof state.newPositions!=="object") state.newPositions={};
 if(!state.theme) state.theme="dark";
-if(!state.pageLayout) state.pageLayout="vertical";
+if(!state.pageLayout) state.pageLayout="horizontal";
 if(typeof state.routeInfoVisible!=="boolean") state.routeInfoVisible=true;
 if(typeof state.activeServiceId!=="string") state.activeServiceId="";
 syncRouteInfoLength();
 }
 
 function syncRouteInfoLength(){
-while(state.routeInfo.kvds.length<state.kvds.length) state.routeInfo.kvds.push({v:{row:"",style:"",pin:""}});
+while(state.routeInfo.kvds.length<state.kvds.length) state.routeInfo.kvds.push({v:{style:"",pin:""}});
 if(state.routeInfo.kvds.length>state.kvds.length) state.routeInfo.kvds=state.routeInfo.kvds.slice(0,state.kvds.length);
 state.routeInfo.kvds.forEach(item=>{
-if(!item.v) item.v={row:"",style:"",pin:""};
-["row","style","pin"].forEach(k=>{if(typeof item.v[k]!=="string") item.v[k]=""});
+if(!item.v) item.v={style:"",pin:""};
+if(typeof item.v.style!=="string") item.v.style="";
+if(typeof item.v.pin!=="string") item.v.pin="";
 });
 }
 
@@ -389,7 +396,6 @@ function renderKvds(){
 normalizeState();
 kvdContainer.innerHTML="";
 addFirstKvdBox.style.display=state.kvds.length===0?"block":"none";
-
 state.kvds.forEach((value,index)=>{
 const chip=document.createElement("div");
 chip.className="kvd-chip";
@@ -400,7 +406,6 @@ chip.innerHTML=`
 `;
 kvdContainer.appendChild(chip);
 });
-
 if(state.kvds.length>0){
 const addButton=document.createElement("button");
 addButton.className="secondary kvd-add-inline";
@@ -409,7 +414,6 @@ addButton.textContent="+";
 addButton.addEventListener("click",addKvd);
 kvdContainer.appendChild(addButton);
 }
-
 kvdContainer.querySelectorAll("[data-kvd-index]").forEach(input=>{
 input.addEventListener("input",event=>{
 const index=Number(event.target.getAttribute("data-kvd-index"));
@@ -422,7 +426,6 @@ refreshDocument();
 saveState();
 });
 });
-
 kvdContainer.querySelectorAll("[data-remove-kvd]").forEach(button=>{
 button.addEventListener("click",event=>{
 const index=Number(event.target.getAttribute("data-remove-kvd"));
@@ -467,8 +470,7 @@ const block=document.createElement("div");
 block.innerHTML=`
 <h3>KVD ${escapeHtml(cleanName)}</h3>
 <h3>V positie</h3>
-<div class="grid-three">
-<div><label>Rij</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="kvd" data-index="${index}" data-field="row" value="${escapeHtml(item.v.row)}"></div>
+<div class="grid-two">
 <div><label>Stijl</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="kvd" data-index="${index}" data-field="style" value="${escapeHtml(item.v.style)}"></div>
 <div><label>Stift</label><input class="numeric-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" data-route="kvd" data-index="${index}" data-field="pin" value="${escapeHtml(item.v.pin)}"></div>
 </div>
@@ -497,7 +499,6 @@ refreshDocument();
 saveState();
 });
 });
-
 refreshActiveServiceRouteInfo();
 }
 
@@ -639,6 +640,7 @@ autoFillNewPositionFromSelection(false);
 
 function refreshLclServices(){
 const current=lclServiceSelect.value;
+const active=getCurrentServiceId();
 lclServiceSelect.innerHTML="";
 Object.keys(state.services).forEach(id=>{
 const option=document.createElement("option");
@@ -646,7 +648,11 @@ option.value=id;
 option.textContent=id+" ("+state.services[id].dikader+")";
 lclServiceSelect.appendChild(option);
 });
-if([...lclServiceSelect.options].some(option=>option.value===current)) lclServiceSelect.value=current;
+if([...lclServiceSelect.options].some(option=>option.value===active)){
+lclServiceSelect.value=active;
+}else if([...lclServiceSelect.options].some(option=>option.value===current)){
+lclServiceSelect.value=current;
+}
 refreshLclInfo();
 }
 
@@ -680,7 +686,7 @@ if(item.type==="hvd"){
 return {row:state.routeInfo.hvd.h.row||"",style:state.routeInfo.hvd.h.style||"",pin:state.routeInfo.hvd.h.pin||""};
 }
 if(item.type==="kvd" && state.routeInfo.kvds[item.index]){
-return {row:state.routeInfo.kvds[item.index].v.row||"",style:state.routeInfo.kvds[item.index].v.style||"",pin:state.routeInfo.kvds[item.index].v.pin||""};
+return {row:"",style:state.routeInfo.kvds[item.index].v.style||"",pin:state.routeInfo.kvds[item.index].v.pin||""};
 }
 return {row:"",style:"",pin:""};
 }
@@ -1063,8 +1069,8 @@ alert("Werkvolgorde: route invullen, route info invullen indien nodig, Service I
 });
 document.getElementById("darkModeButton").addEventListener("click",()=>setTheme("dark"));
 document.getElementById("lightModeButton").addEventListener("click",()=>setTheme("light"));
-document.getElementById("pageVerticalButton").addEventListener("click",()=>setPageLayout("vertical"));
 document.getElementById("pageHorizontalButton").addEventListener("click",()=>setPageLayout("horizontal"));
+document.getElementById("pageVerticalButton").addEventListener("click",()=>setPageLayout("vertical"));
 document.getElementById("clearDocumentButton").addEventListener("click",()=>{
 showConfirm("Document legen","Dit verwijdert alle metingen en LCL-metingen. Route, Route info, Service ID's en dikader-koppelingen blijven behouden.",clearDocument);
 });
