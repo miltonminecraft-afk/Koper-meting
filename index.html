@@ -6,7 +6,7 @@
 <title>Kopermetingen</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <style>
-:root{--bg:#f4f6fa;--panel:#fff;--panel2:#eef1f7;--text:#10141d;--muted:#667085;--border:#d6dbe6;--accent:#0b66d8;--danger:#c91d1d;--success:#148a42;--input:#fff}
+:root{--bg:#f4f6fa;--panel:#fff;--panel2:#eef1f7;--text:#10141d;--muted:#667085;--border:#d6dbe6;--accent:#00C300;--danger:#c91d1d;--success:#148a42;--input:#fff}
 body.dark{--bg:#07090d;--panel:#11151d;--panel2:#0c0f15;--text:#f4f6fb;--muted:#a8afbd;--border:#2a303c;--accent:#e02020;--danger:#e02020;--success:#159947;--input:#090c12}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}
@@ -86,7 +86,7 @@ button{border:0;border-radius:8px;padding:13px 14px;font-size:16px;font-weight:b
 .primary{background:var(--danger);color:white}
 .success{background:var(--success);color:white}
 .secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
-.blue{background:#0b66d8;color:white}
+.blue{background:var(--accent);color:white}
 .full{width:100%;margin-top:14px}
 .note{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.4}
 .document-card{height:calc(100vh - 110px);display:flex;flex-direction:column}
@@ -296,7 +296,7 @@ function limitRegistrationValue(value){return String(value||"").trim().toUpperCa
 function normalizeRegistrationInput(input){input.value=limitRegistrationValue(input.value)}
 function saveState(){state.hvd=hvdInput.value.trim().toUpperCase();localStorage.setItem("kopermetingen",JSON.stringify(state))}
 function loadState(){const stored=localStorage.getItem("kopermetingen");if(stored){try{Object.assign(state,JSON.parse(stored))}catch(e){}}if(!Array.isArray(state.kvds))state.kvds=[];if(typeof state.routeVisible!=="boolean")state.routeVisible=true;if(typeof state.routeInfoVisible!=="boolean")state.routeInfoVisible=false;if(typeof state.currentRouteVisible!=="boolean")state.currentRouteVisible=true;if(typeof state.measurementVisible!=="boolean")state.measurementVisible=true;if(typeof state.newPositionVisible!=="boolean")state.newPositionVisible=true;if(typeof state.lclVisible!=="boolean")state.lclVisible=true;if(typeof state.routeInfoSelectedServiceId!=="string")state.routeInfoSelectedServiceId="";if(!state.services)state.services={};if(!Array.isArray(state.measurements))state.measurements=[];if(!Array.isArray(state.lcls)){const old=state.lcls||{};state.lcls=[];Object.keys(old).forEach(id=>state.lcls.push({serviceId:id,measurementId:"",routeLine:"",value:old[id]}))}if(!state.routeChanges||Array.isArray(state.routeChanges))state.routeChanges={};Object.keys(state.routeChanges).forEach(id=>state.routeChanges[id]=cleanRouteChangeList(state.routeChanges[id]));if(!state.routeRestored||Array.isArray(state.routeRestored))state.routeRestored={};normalizeAllRouteInfos();Object.keys(state.services).forEach(id=>{if(!state.serviceRouteInfo[id])state.serviceRouteInfo[id]=cloneRouteInfo(state.routeInfo)});state.measurements.forEach((m,i)=>{if(!m.id)m.id="m"+Date.now()+"_"+i;if(!m.positionText)m.positionText=buildPositionText(m.position,m.direction,m.dikader);m.routeChanges=cleanRouteChangeList(m.routeChanges)})}
-function setTheme(v){state.theme=v;document.body.classList.toggle("dark",v==="dark");document.getElementById("darkCheck").textContent=v==="dark"?"✓":"";document.getElementById("lightCheck").textContent=v==="light"?"✓":"";saveState()}
+function setTheme(v){state.theme=v;document.body.classList.toggle("dark",v==="dark");document.getElementById("darkCheck").textContent=v==="dark"?"✓":"";document.getElementById("lightCheck").textContent=v==="light"?"✓":"";localStorage.setItem("toolsTheme",v);saveState()}
 function setPageLayout(v){state.pageLayout=v;document.body.classList.toggle("page-layout-horizontal",v==="horizontal");document.body.classList.toggle("page-layout-vertical",v==="vertical");document.getElementById("pageHorizontalCheck").textContent=v==="horizontal"?"✓":"";document.getElementById("pageVerticalCheck").textContent=v==="vertical"?"✓":"";saveState()}
 function renderKvds(){kvdContainer.innerHTML="";state.kvds.forEach((value,index)=>{const row=document.createElement("div");row.className="kvd-row";const label=document.createElement("label");label.textContent="KVD";const input=document.createElement("input");input.value=value||"";input.placeholder="AA";input.addEventListener("input",()=>{state.kvds[index]=input.value.trim().toUpperCase();normalizeAllRouteInfos();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});const remove=document.createElement("button");remove.className="secondary";remove.type="button";remove.textContent="×";remove.addEventListener("click",()=>{state.kvds.splice(index,1);state.routeInfo.kvds.splice(index,1);Object.keys(state.serviceRouteInfo).forEach(id=>state.serviceRouteInfo[id].kvds.splice(index,1));if(state.lastRouteInfoTemplate)state.lastRouteInfoTemplate.kvds.splice(index,1);renderKvds();normalizeAllRouteInfos();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()});row.appendChild(label);row.appendChild(input);row.appendChild(remove);kvdContainer.appendChild(row)})}
 function addKvd(){state.kvds.push("");state.routeInfo.kvds.push(emptyVInfo());Object.keys(state.serviceRouteInfo).forEach(id=>state.serviceRouteInfo[id].kvds.push(emptyVInfo()));if(state.lastRouteInfoTemplate)state.lastRouteInfoTemplate.kvds.push(emptyVInfo());renderKvds();refreshRouteOptions();renderRouteInfo();refreshDocument();saveState()}
@@ -520,6 +520,7 @@ WERKVOLGORDE
 12. Tekst kopiëren of versturen via Bluetooth.`);
 document.getElementById("darkModeButton").onclick=()=>setTheme("dark");
 document.getElementById("lightModeButton").onclick=()=>setTheme("light");
+window.addEventListener("storage",e=>{if(e.key==="toolsTheme"&&(e.newValue==="dark"||e.newValue==="light"))setTheme(e.newValue)});
 document.getElementById("pageHorizontalButton").onclick=()=>setPageLayout("horizontal");
 document.getElementById("pageVerticalButton").onclick=()=>setPageLayout("vertical");
 document.getElementById("clearDocumentButton").onclick=()=>showConfirm("Document legen","Dit verwijdert metingen, LCL, nieuwe posities en route hersteld. Route en koppelingen blijven staan.",clearDocument);
@@ -557,7 +558,7 @@ newPositionInputs().forEach(input=>input.addEventListener("input",()=>{normalize
 newPositionSelect.addEventListener("change",()=>{updateNewPositionLayout();refreshNewDikaderOptions();prefillNewPositionFromService(true);saveState()});
 newDikaderSelect.addEventListener("change",saveState);
 lclServiceSelect.addEventListener("change",refreshLclMeasurementOptions);
-loadState();hvdInput.value=state.hvd||"";renderServiceClear();renderKvds();renderServiceIdsList();renderSectionVisibility();renderRouteInfo();refreshRouteOptions();setLocationToFirstRouteItem();refreshServices();setTheme(state.theme);setPageLayout(state.pageLayout);updateNewPositionLayout();prefillNewPositionFromService(true);refreshDocument();
+loadState();const sharedTheme=localStorage.getItem("toolsTheme");if(sharedTheme==="dark"||sharedTheme==="light")state.theme=sharedTheme;else localStorage.setItem("toolsTheme",state.theme==="light"?"light":"dark");hvdInput.value=state.hvd||"";renderServiceClear();renderKvds();renderServiceIdsList();renderSectionVisibility();renderRouteInfo();refreshRouteOptions();setLocationToFirstRouteItem();refreshServices();setTheme(state.theme);setPageLayout(state.pageLayout);updateNewPositionLayout();prefillNewPositionFromService(true);refreshDocument();
 </script>
 </body>
 </html>
